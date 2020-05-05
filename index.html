@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta property="og:type" content="website">
+<meta property="og:title" content="Hexo">
+<meta property="og:url" content="http://yoursite.com/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:locale" content="en_US">
+<meta property="article:author" content="John Doe">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main">
+  
+    <article id="post-test" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2020/05/05/test/" class="article-date">
+  <time datetime="2020-05-05T08:44:46.639Z" itemprop="datePublished">2020-05-05</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/05/05/test/">test</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="Java类的初始化过程"><a href="#Java类的初始化过程" class="headerlink" title="Java类的初始化过程"></a>Java类的初始化过程</h1><p><a name="jAy4I"></a></p>
+<h3 id="refer"><a href="#refer" class="headerlink" title="refer"></a>refer</h3><ul>
+<li><a href="https://docs.oracle.com/javase/specs/jls/se13/html/jls-12.html#jls-12.1" target="_blank" rel="noopener">https://docs.oracle.com/javase/specs/jls/se13/html/jls-12.html#jls-12.1</a></li>
+<li>《深入理解Java虚拟机》P210-P227</li>
+</ul>
+<br />
+<br />
+<br />
+
+<p><a name="atHd5"></a></p>
+<h3 id="类的整个生命周期过程"><a href="#类的整个生命周期过程" class="headerlink" title="类的整个生命周期过程"></a>类的整个生命周期过程</h3><ul>
+<li>加载</li>
+<li>连接<ul>
+<li>校验</li>
+<li>准备</li>
+<li>解析</li>
+</ul>
+</li>
+<li>初始化</li>
+<li>使用</li>
+<li>卸载</li>
+</ul>
+<p><img src="https://cdn.nlark.com/yuque/0/2019/png/289364/1570284249293-3cdb4e86-b68d-4e9b-94df-e13986f88617.png#align=left&display=inline&height=258&margin=%5Bobject%20Object%5D&name=image.png&originHeight=516&originWidth=1504&size=184431&status=done&style=none&width=752" alt="image.png"><br /><br><br /><br><br /></p>
+<p><a name="E8x6j"></a></p>
+<h3 id="类创建过程主要分两步骤"><a href="#类创建过程主要分两步骤" class="headerlink" title="类创建过程主要分两步骤"></a>类创建过程主要分两步骤</h3><ul>
+<li>类的加载过程, 本质上是在方法区生成类的Class对象，共其他地方引用使用</li>
+<li>类的实例化</li>
+</ul>
+<p><a name="l282i"></a></p>
+<h4 id="次序"><a href="#次序" class="headerlink" title="次序"></a>次序</h4><ul>
+<li>次序是: 先自己的变量-&gt;父类-&gt;初始化</li>
+<li>接口跟类不一样，接口只有在使用到的时候才会去初始化，而类即使没有使用到也会在它的子类初始化的时候被初始化出来</li>
+</ul>
+<p><a name="k5GKh"></a></p>
+<h4 id="类加载过程"><a href="#类加载过程" class="headerlink" title="类加载过程"></a>类加载过程</h4><p>加载过程主要是对class的加载，不包含实例的初始化过程，所以操作的内存区域是方法区，这个过程主要包括：</p>
+<ul>
+<li>加载，将字节码文件加载到内存中来(比如从jar包中加载，从URL中加载)</li>
+<li>连接(link)<ul>
+<li>校验(verify): 校验字节码是否符合规范，比如<ul>
+<li>是否以魔数0xCAFEBABE开头</li>
+<li>major/minor version是否是当前JVM支持的</li>
+</ul>
+</li>
+<li>准备(prepare)，该阶段主要是给class的初始化做内存准备(静态变量)，比如<ul>
+<li>为类变量(非实例变量)分配内存</li>
+<li>为类变量赋予零值，比如int会给个0</li>
+<li>对于final的类变量，这个阶段会直接给变量赋值而不是给初始值</li>
+</ul>
+</li>
+<li>解析(resolve)，该阶段主要是解析该类引用的其他类，并将它们加载进来</li>
+</ul>
+</li>
+<li>初始化<ul>
+<li>对静态变量进行初始化</li>
+<li>这个阶段会初始化静态变量和调用静态代码块</li>
+<li>他们之间谁先谁后，取决于他们在源码中的先后顺序</li>
+</ul>
+</li>
+</ul>
+<br />
+
+<p><a name="izS7T"></a></p>
+<h4 id="实例的初始化过程"><a href="#实例的初始化过程" class="headerlink" title="实例的初始化过程"></a>实例的初始化过程</h4><ul>
+<li>为实例变量分配内存，主要是堆中</li>
+<li>给实例变量分配初始值</li>
+<li>实例化父类</li>
+<li>给实例变量赋予源码中的值, 调用实例块 (他们的先后顺序取决于他们在源码中的位置)</li>
+<li>执行构造方法中剩余的代码</li>
+</ul>
+<br />
+
+<p><a name="Yqlqk"></a></p>
+<h3 id="实例创建的整个过程"><a href="#实例创建的整个过程" class="headerlink" title="实例创建的整个过程"></a>实例创建的整个过程</h3><p><img src="https://cdn.nlark.com/yuque/0/2019/svg/289364/1570285683740-cdad0d4a-5344-460d-afe2-78c72994fa30.svg#align=left&display=inline&height=569&margin=%5Bobject%20Object%5D&name=%E7%B1%BB%E7%9A%84%E5%88%9D%E5%A7%8B%E5%8C%96guocheng.svg&originHeight=569&originWidth=1131&size=16899&status=done&style=none&width=1131" alt="类的初始化guocheng.svg"><br /><br><br /><br><br /></p>
+<p><a name="GYm9T"></a></p>
+<h3 id="一些注意事项"><a href="#一些注意事项" class="headerlink" title="一些注意事项"></a>一些注意事项</h3><p><a name="R8DyH"></a></p>
+<h4 id="1-被动引用不会触发初始化"><a href="#1-被动引用不会触发初始化" class="headerlink" title="1. 被动引用不会触发初始化"></a>1. 被动引用不会触发初始化</h4><p>被动加载是相对主动加载来说的，主动加载是Java虚拟机规范中定义的几种类型:</p>
+<ul>
+<li>通过new/getstatic/putstatic/invokestatic指令触发的初始化</li>
+<li>通过反射调用类的方法触发的初始化</li>
+<li>在加载子类的时候，发现父类没有加载而触发的父类加载</li>
+<li>调用类的main方法导致该类的初始化</li>
+</ul>
+<p><a name="iGhLB"></a></p>
+<h5 id="1-1-通过子类引用父类的静态变量，不会导致子类的初始化"><a href="#1-1-通过子类引用父类的静态变量，不会导致子类的初始化" class="headerlink" title="1.1 通过子类引用父类的静态变量，不会导致子类的初始化"></a>1.1 通过子类引用父类的静态变量，不会导致子类的初始化</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ParentClass</span> </span>&#123;</span><br><span class="line">    <span class="keyword">static</span> &#123;</span><br><span class="line">        System.out.println(<span class="string">"Parent Class static block"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">int</span> value = <span class="number">13</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SubClass</span> <span class="keyword">extends</span> <span class="title">ParentClass</span> </span>&#123;</span><br><span class="line">    <span class="keyword">static</span> &#123;</span><br><span class="line">        System.out.println(<span class="string">"SubClass static block"</span>);</span><br><span class="line">    &#125;   </span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">NotInitializingTest</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">		System.out.println(SubClass.value);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><br />以上代码只会初始化ParentClass，不会初始化SubClass. 输出的结果:<br /></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Parent Class static block</span><br><span class="line">13</span><br></pre></td></tr></table></figure>
+
+<br />
+<br />
+
+<p><a name="X2MeK"></a></p>
+<h5 id="1-2-通过数组定义来引用类，不会触发类的初始化"><a href="#1-2-通过数组定义来引用类，不会触发类的初始化" class="headerlink" title="1.2 通过数组定义来引用类，不会触发类的初始化"></a>1.2 通过数组定义来引用类，不会触发类的初始化</h5><p>数组的生成其实并没有生成数组元素的类，生成的是数组类, 比如 “[java.lang.Integer” 这样的类.<br /></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ParentClass</span> </span>&#123;</span><br><span class="line">    <span class="keyword">static</span> &#123;</span><br><span class="line">        System.out.println(<span class="string">"Parent Class static block"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">int</span> value = <span class="number">13</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SubClass</span> <span class="keyword">extends</span> <span class="title">ParentClass</span> </span>&#123;</span><br><span class="line">    <span class="keyword">static</span> &#123;</span><br><span class="line">        System.out.println(<span class="string">"SubClass static block"</span>);</span><br><span class="line">    &#125;   </span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">NotInitializingTest</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">		SubClass[] subClasses = <span class="keyword">new</span> SubClass[<span class="number">1</span>];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><br />运行之后发现，什么也没有输出，说明<code>SubClass[] subClasses = new SubClass[1];</code>跟 SubClass没有关系<br /></p>
+<p><a name="tcfKs"></a></p>
+<h5 id="1-3-引用常量不会触发定义常量的类的初始化"><a href="#1-3-引用常量不会触发定义常量的类的初始化" class="headerlink" title="1.3 引用常量不会触发定义常量的类的初始化"></a>1.3 引用常量不会触发定义常量的类的初始化</h5><p>常量是只那些 final static的变量，这些变量会在准备阶段就初始化好，然后就会进入常量池里，之后其实就跟它所在的类没什么关系了. 后面其他类引用它的时候其实是从常量池中获取的.<br /></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ConstantClass</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> &#123;</span><br><span class="line">        System.out.println(<span class="string">"constant class init"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String DEFAULT_NAME = <span class="string">"kobe"</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">NotInitializingTest</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">		System.out.println(ConstantClass.DEFAULT_NAME);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p><a name="sA9wT"></a></p>
+<h3 id="2-父子类中override方法的执行"><a href="#2-父子类中override方法的执行" class="headerlink" title="2. 父子类中override方法的执行"></a>2. 父子类中override方法的执行</h3><p>当子类override了父类的方法的时候，在构造子类的实例阶段，父类调用的是子类的方法<br /></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ParentClass</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ParentClass</span><span class="params">()</span></span>&#123;</span><br><span class="line">        printThree();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">printThree</span><span class="params">()</span></span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"three"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SubClass</span> <span class="keyword">extends</span> <span class="title">ParentClass</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span>  <span class="keyword">int</span> three = <span class="number">3</span>;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">SubClass</span><span class="params">()</span></span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"SubClass Constructor"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">printThree</span><span class="params">()</span></span>&#123;</span><br><span class="line">        System.out.println(three);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">InitializingTest</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        SubClass subClass = <span class="keyword">new</span> SubClass();</span><br><span class="line">        subClass.printThree();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><br />输出的结果:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">0</span><br><span class="line">SubClass Constructor</span><br><span class="line">3</span><br></pre></td></tr></table></figure>
+<p>这是因为在父类构造的时候，调用的是子类的printThree()，而此时three=0<br /><br><br /></p>
+<p><a name="jVwYo"></a></p>
+<h4 id="一个完整的实例构造例子"><a href="#一个完整的实例构造例子" class="headerlink" title="一个完整的实例构造例子"></a>一个完整的实例构造例子</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ParentClass</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> &#123;</span><br><span class="line">        System.out.println(<span class="string">"Parent Class static block"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">int</span> value = <span class="number">13</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    &#123;</span><br><span class="line">        System.out.println(<span class="string">"Parent Class instance block"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span>  <span class="keyword">int</span> k = <span class="number">20</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ParentClass</span><span class="params">()</span></span>&#123;</span><br><span class="line">        printThree();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">printThree</span><span class="params">()</span></span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"three"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SubClass</span> <span class="keyword">extends</span> <span class="title">ParentClass</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> String staticBefore = staticP(<span class="string">"before"</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> &#123;</span><br><span class="line">        System.out.println(<span class="string">"SubClass static block"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> String staticAfter = staticP(<span class="string">"after"</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> String instanceBefore = initK(<span class="string">"before"</span>);</span><br><span class="line">    &#123;</span><br><span class="line">        System.out.println(<span class="string">"SubClass instance block"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> String instanceAfter = initK(<span class="string">"after"</span>);</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">int</span> three = <span class="number">3</span>;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> String <span class="title">staticP</span><span class="params">(String i)</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"static param: "</span> + i);</span><br><span class="line">        <span class="keyword">return</span> i;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    SubClass() &#123;</span><br><span class="line">        System.out.println(<span class="string">"SubClass Constructor"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">initK</span><span class="params">(String j)</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"instance param:"</span> + j);</span><br><span class="line">        <span class="keyword">return</span> j;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">printThree</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        System.out.println(three);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">InitializingTest</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        SubClass subClass = <span class="keyword">new</span> SubClass();</span><br><span class="line"></span><br><span class="line">        subClass.printThree();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><br />输出的结果<br /></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">Parent Class static block</span><br><span class="line">static param: before</span><br><span class="line">SubClass static block</span><br><span class="line">static param: after</span><br><span class="line">Parent Class instance block</span><br><span class="line">0</span><br><span class="line">instance param:before</span><br><span class="line">SubClass instance block</span><br><span class="line">instance param:after</span><br><span class="line">SubClass Constructor</span><br><span class="line">3</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2020/05/05/test/" data-id="ck9to632m000090usablf70bb" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-hello-world" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2020/05/05/hello-world/" class="article-date">
+  <time datetime="2020-05-05T07:30:24.204Z" itemprop="datePublished">2020-05-05</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/05/05/hello-world/">Hello World</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Welcome to <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="noopener">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="noopener">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="noopener">GitHub</a>.</p>
+<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">"My New Post"</span></span><br></pre></td></tr></table></figure>
+
+<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="noopener">Writing</a></p>
+<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
+
+<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="noopener">Server</a></p>
+<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
+
+<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="noopener">Generating</a></p>
+<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
+
+<p>More info: <a href="https://hexo.io/docs/one-command-deployment.html" target="_blank" rel="noopener">Deployment</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2020/05/05/hello-world/" data-id="ck9tlgdqf000070us2kf99nk0" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/05/">May 2020</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2020/05/05/test/">test</a>
+          </li>
+        
+          <li>
+            <a href="/2020/05/05/hello-world/">Hello World</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2020 John Doe<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+</body>
+</html>
