@@ -64,9 +64,9 @@
       <div class="outer">
         <section id="main">
   
-    <article id="post-偶遇Spring的BeanFactory.getBeansOfType与Dubbo的ReferenceBean冲突" class="article article-type-post" itemscope itemprop="blogPost">
+    <article id="post-Spring的BeanFactory.getBeansOfType的坑" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2020/05/07/%E5%81%B6%E9%81%87Spring%E7%9A%84BeanFactory.getBeansOfType%E4%B8%8EDubbo%E7%9A%84ReferenceBean%E5%86%B2%E7%AA%81/" class="article-date">
+    <a href="/2020/05/07/Spring%E7%9A%84BeanFactory.getBeansOfType%E7%9A%84%E5%9D%91/" class="article-date">
   <time datetime="2020-05-07T11:12:27.946Z" itemprop="datePublished">2020-05-07</time>
 </a>
     
@@ -78,7 +78,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2020/05/07/%E5%81%B6%E9%81%87Spring%E7%9A%84BeanFactory.getBeansOfType%E4%B8%8EDubbo%E7%9A%84ReferenceBean%E5%86%B2%E7%AA%81/">偶遇Spring的BeanFactory.getBeansOfType与Dubbo的ReferenceBean冲突</a>
+      <a class="article-title" href="/2020/05/07/Spring%E7%9A%84BeanFactory.getBeansOfType%E7%9A%84%E5%9D%91/">Spring的BeanFactory.getBeansOfType的坑</a>
     </h1>
   
 
@@ -86,7 +86,7 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h1 id="Spring的BeanFactory-getBeansOfType与Dubbo的ReferenceBean冲突"><a href="#Spring的BeanFactory-getBeansOfType与Dubbo的ReferenceBean冲突" class="headerlink" title="Spring的BeanFactory.getBeansOfType与Dubbo的ReferenceBean冲突"></a>Spring的BeanFactory.getBeansOfType与Dubbo的ReferenceBean冲突</h1><br />
+        <h1 id="Spring的BeanFactory-getBeansOfType的坑"><a href="#Spring的BeanFactory-getBeansOfType的坑" class="headerlink" title="Spring的BeanFactory.getBeansOfType的坑"></a>Spring的BeanFactory.getBeansOfType的坑</h1><br />
 
 <p><a name="MojXv"></a></p>
 <h3 id="背景及问题发现"><a href="#背景及问题发现" class="headerlink" title="背景及问题发现"></a>背景及问题发现</h3><p>有时候，我们会在spring的bean实例化之前做一些校验，比如校验某些package下的类的命名是否符合规范，此时就会去实现 BeanDefinitionRegistryPostProcessor 做一些事情<br /><br><br />我们假设，我们需要校验的类都实现了一个interface，名叫: IProxyBaseService， 那么我们很自然的就会有以下思路</p>
@@ -117,17 +117,40 @@
 
 <br />
 <br />这样就会尝试去实例化ReferenceBean了，最后就会走到org.apache.dubbo.config.spring.ReferenceBean#afterPropertiesSet， 由于现在还只是在BeanDefinition处理阶段，还并没有到占位符的设置阶段，所以是读取不到占位符的值的，所以它还是原来的模样: ${zookeeper.address}, 并没有变形<br />
+<br />![2333.png](https://cdn.nlark.com/yuque/0/2020/png/289364/1588851051637-65d5b64e-dec9-4390-b411-08d1b32d41b9.png#align=left&display=inline&height=321&margin=%5Bobject%20Object%5D&name=2333.png&originHeight=1200&originWidth=2788&size=477519&status=done&style=none&width=746)<br />this<br />
 
-
-<p><br /><img src="https://cdn.nlark.com/yuque/0/2020/png/289364/1588851051637-65d5b64e-dec9-4390-b411-08d1b32d41b9.png#align=left&display=inline&height=321&margin=%5Bobject%20Object%5D&name=2333.png&originHeight=1200&originWidth=2788&size=477519&status=done&style=none&width=746" alt="image.png"><br /></p>
 <p><a name="up6HB"></a></p>
 <h3 id="解决"><a href="#解决" class="headerlink" title="解决"></a>解决</h3><p>知道问题的原因了: beanFactory.getBeansOfType的参数allowEagerInit=true时会将FactoryBean初始化掉。<br />所以改起来也很简单，就是使用另外一个方法:<br /><code>beanFactory.getBeansOfType(IProxyBaseService.class,false, false);</code><br /><br><br />最终代码如下：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">postProcessBeanFactory</span><span class="params">(ConfigurableListableBeanFactory beanFactory)</span> <span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line"></span><br><span class="line">        Map&lt;String, IProxyBaseService&gt; nameInstanceMap = beanFactory.getBeansOfType(IProxyBaseService<span class="class">.<span class="keyword">class</span>,<span class="title">false</span>, <span class="title">false</span>)</span>;</span><br><span class="line">        <span class="keyword">if</span> (MapUtils.isEmpty(nameInstanceMap)) &#123;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        nameInstanceMap.forEach((beanName, beanInstance) -&gt; &#123;</span><br><span class="line">            Set&lt;Class&lt;?&gt;&gt; interfaces = ClassUtils.getAllInterfacesAsSet(beanInstance);</span><br><span class="line">            <span class="keyword">if</span> (CollectionUtils.isEmpty(interfaces)) &#123;</span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">for</span> (Class&lt;?&gt; interfaceCls : interfaces) &#123;</span><br><span class="line">                <span class="keyword">if</span> (!ClassUtils.isAssignable(IProxyBaseService<span class="class">.<span class="keyword">class</span>, <span class="title">interfaceCls</span>)) </span>&#123;</span><br><span class="line">                    <span class="keyword">continue</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                checkInterfaceMethods(interfaceCls);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
 
+<br />
+
+<p><a name="LfS6k"></a></p>
+<h3 id="事情还在急需"><a href="#事情还在急需" class="headerlink" title="事情还在急需"></a>事情还在急需</h3><p><br />然而事情并没有那么简单，在后面的测试中，会发现，实现了IProxyBaseService的类，其field都是null.<br /><img src="https://cdn.nlark.com/yuque/0/2020/png/289364/1588866056546-e1053025-c10a-4151-97f0-541d6b28fb3e.png?x-oss-process=image%2Fresize%2Cw_1466" alt="image.png"><br /><br><br />这很严重啊。既然是都为空，那么看看它是什么时候进行初始化的，然后找了一个类，在其后面加了个InitializingBean进行断点调试</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DeviceProxyServiceImpl</span> <span class="keyword">implements</span> <span class="title">IDeviceProxyService</span>, <span class="title">InitializingBean</span></span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">afterPropertiesSet</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        log.info(<span class="string">"...."</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<br />
+<br />debug后，发现这是从 beanFactory.getBeansOfType(IProxyBaseService.class,false, false); 调用过来的。<br />代码如下: org.springframework.beans.factory.support.DefaultListableBeanFactory#getBeansOfType<br />
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> &lt;T&gt; <span class="function">Map&lt;String, T&gt; <span class="title">getBeansOfType</span><span class="params">(Class&lt;T&gt; type, <span class="keyword">boolean</span> includeNonSingletons, <span class="keyword">boolean</span> allowEagerInit)</span></span></span><br><span class="line"><span class="function">            <span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line">        <span class="comment">// 1.这一行，是FactoryBean初始化的问题的根源</span></span><br><span class="line">        String[] beanNames = getBeanNamesForType(type, includeNonSingletons, allowEagerInit);</span><br><span class="line">        </span><br><span class="line">        Map&lt;String, T&gt; result = <span class="keyword">new</span> LinkedHashMap&lt;String, T&gt;(beanNames.length);</span><br><span class="line">        <span class="comment">// 2.可是事情并没有完，当找出了IProxyBaseService这个类的beanName之后，就到了这</span></span><br><span class="line">        <span class="keyword">for</span> (String beanName : beanNames) &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">               <span class="comment">// 这里有一个getBean，然后就会去创建bean. 而此时bean都还没有实例化出来，所以都是null </span></span><br><span class="line">                result.put(beanName, getBean(beanName, type));</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">catch</span> (BeanCreationException ex) &#123;</span><br><span class="line">                ...</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> result;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p><br />解决方法是, 不使用beanFactory.getBeansOfType， 而是使用BeanDefinitionRegistry去获取对应的beanName，然后找到对应的class做自己的业务</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">postProcessBeanDefinitionRegistry</span><span class="params">(BeanDefinitionRegistry registry)</span> <span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line">       String[] beanNames = registry.getBeanDefinitionNames();</span><br><span class="line">       <span class="keyword">if</span> (beanNames == <span class="keyword">null</span> || beanNames.length &lt; <span class="number">1</span>) &#123;</span><br><span class="line">           <span class="keyword">return</span>;</span><br><span class="line">       &#125;</span><br><span class="line">       <span class="keyword">for</span> (String beanName : beanNames) &#123;</span><br><span class="line">           BeanDefinition beanDefinition = registry.getBeanDefinition(beanName);</span><br><span class="line">           String beanClsName = beanDefinition.getBeanClassName();</span><br><span class="line">           <span class="keyword">if</span> (!StringUtils.contains(beanClsName, <span class="string">"com.xxx.impl"</span>)) &#123;</span><br><span class="line">               <span class="keyword">continue</span>;</span><br><span class="line">           &#125;</span><br><span class="line"></span><br><span class="line">           Class cls = ClassUtils.resolveClassName(beanClsName, Thread.currentThread().getContextClassLoader());</span><br><span class="line">           Set&lt;Class&lt;?&gt;&gt; interfaces = ClassUtils.getAllInterfacesAsSet(cls);</span><br><span class="line">           <span class="keyword">if</span> (CollectionUtils.isEmpty(interfaces)) &#123;</span><br><span class="line">               <span class="keyword">continue</span>;</span><br><span class="line">           &#125;</span><br><span class="line">           <span class="keyword">for</span> (Class&lt;?&gt; interfaceCls : interfaces) &#123;</span><br><span class="line">               <span class="keyword">if</span> (!ClassUtils.isAssignable(IProxyBaseService<span class="class">.<span class="keyword">class</span>, <span class="title">interfaceCls</span>)) </span>&#123;</span><br><span class="line">                   <span class="keyword">continue</span>;</span><br><span class="line">               &#125;</span><br><span class="line">               checkInterfaceMethods(interfaceCls);</span><br><span class="line">           &#125;</span><br><span class="line">       &#125;</span><br><span class="line"></span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+
+<br />
+
+<p><a name="dyGDj"></a></p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><ul>
+<li>在bean没有实例化好的时候，不能随便使用beanFactory.getBeansOfType这个方法，这个会坑死人的</li>
+<li>在bean没有实例化时做一些校验，能减少系统资源的开销(链接创建/资源分配等)，但实现的时候需要千万小心</li>
+</ul>
+<br />
+
+
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://gukie.github.io/2020/05/07/%E5%81%B6%E9%81%87Spring%E7%9A%84BeanFactory.getBeansOfType%E4%B8%8EDubbo%E7%9A%84ReferenceBean%E5%86%B2%E7%AA%81/" data-id="ck9wobuf20000afuse0jb8wsv" class="article-share-link">Share</a>
+      <a data-url="https://gukie.github.io/2020/05/07/Spring%E7%9A%84BeanFactory.getBeansOfType%E7%9A%84%E5%9D%91/" data-id="ck9wy7j2m00006sus6i3v8ghn" class="article-share-link">Share</a>
       
       
     </footer>
@@ -312,7 +335,7 @@
       <ul>
         
           <li>
-            <a href="/2020/05/07/%E5%81%B6%E9%81%87Spring%E7%9A%84BeanFactory.getBeansOfType%E4%B8%8EDubbo%E7%9A%84ReferenceBean%E5%86%B2%E7%AA%81/">偶遇Spring的BeanFactory.getBeansOfType与Dubbo的ReferenceBean冲突</a>
+            <a href="/2020/05/07/Spring%E7%9A%84BeanFactory.getBeansOfType%E7%9A%84%E5%9D%91/">Spring的BeanFactory.getBeansOfType的坑</a>
           </li>
         
           <li>
