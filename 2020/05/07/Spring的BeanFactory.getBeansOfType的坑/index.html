@@ -7,12 +7,12 @@
   
   <title>Spring的BeanFactory.getBeansOfType的坑 | Hi buddy, look at you...</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="Spring的BeanFactory.getBeansOfType的坑   背景及问题发现有时候，我们会在spring的bean实例化之前做一些校验，比如校验某些package下的类的命名是否符合规范，此时就会去实现 BeanDefinitionRegistryPostProcessor 做一些事情我们假设，我们需要校验的类都实现了一个interface，名叫: IProxyBaseService">
+  <meta name="description" content="背景及问题发现有时候，我们会在spring的bean实例化之前做一些校验，比如校验某些package下的类的命名是否符合规范，此时就会去实现 BeanDefinitionRegistryPostProcessor 做一些事情我们假设，我们需要校验的类都实现了一个interface，名叫: IProxyBaseService， 那么我们很自然的就会有以下思路  获取所有 IProxyBaseSer">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Spring的BeanFactory.getBeansOfType的坑">
 <meta property="og:url" content="https://gukie.github.io/2020/05/07/Spring%E7%9A%84BeanFactory.getBeansOfType%E7%9A%84%E5%9D%91/index.html">
 <meta property="og:site_name" content="Hi buddy, look at you...">
-<meta property="og:description" content="Spring的BeanFactory.getBeansOfType的坑   背景及问题发现有时候，我们会在spring的bean实例化之前做一些校验，比如校验某些package下的类的命名是否符合规范，此时就会去实现 BeanDefinitionRegistryPostProcessor 做一些事情我们假设，我们需要校验的类都实现了一个interface，名叫: IProxyBaseService">
+<meta property="og:description" content="背景及问题发现有时候，我们会在spring的bean实例化之前做一些校验，比如校验某些package下的类的命名是否符合规范，此时就会去实现 BeanDefinitionRegistryPostProcessor 做一些事情我们假设，我们需要校验的类都实现了一个interface，名叫: IProxyBaseService， 那么我们很自然的就会有以下思路  获取所有 IProxyBaseSer">
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://gukie.github.io/2020/05/07/Spring%E7%9A%84BeanFactory.getBeansOfType%E7%9A%84%E5%9D%91/spring-1.png">
 <meta property="og:image" content="https://gukie.github.io/2020/05/07/Spring%E7%9A%84BeanFactory.getBeansOfType%E7%9A%84%E5%9D%91/spring-2.png">
@@ -95,9 +95,7 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h1 id="Spring的BeanFactory-getBeansOfType的坑"><a href="#Spring的BeanFactory-getBeansOfType的坑" class="headerlink" title="Spring的BeanFactory.getBeansOfType的坑"></a>Spring的BeanFactory.getBeansOfType的坑</h1><br>
-
-<p><a name="MojXv"></a></p>
+        <p><a name="MojXv"></a></p>
 <h3 id="背景及问题发现"><a href="#背景及问题发现" class="headerlink" title="背景及问题发现"></a>背景及问题发现</h3><p>有时候，我们会在spring的bean实例化之前做一些校验，比如校验某些package下的类的命名是否符合规范，此时就会去实现 BeanDefinitionRegistryPostProcessor 做一些事情<br><br><br>我们假设，我们需要校验的类都实现了一个interface，名叫: IProxyBaseService， 那么我们很自然的就会有以下思路</p>
 <ul>
 <li>获取所有 IProxyBaseService的bean的定义</li>
@@ -160,7 +158,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://gukie.github.io/2020/05/07/Spring%E7%9A%84BeanFactory.getBeansOfType%E7%9A%84%E5%9D%91/" data-id="cka16p8vm0001hlus3lu96jit" class="article-share-link">Share</a>
+      <a data-url="https://gukie.github.io/2020/05/07/Spring%E7%9A%84BeanFactory.getBeansOfType%E7%9A%84%E5%9D%91/" data-id="cka16rxo10001k5us4mze28ae" class="article-share-link">Share</a>
       
       
     </footer>
