@@ -18,6 +18,7 @@
 <meta property="og:image" content="https://gukie.github.io/2020/05/07/Spring%E7%9A%84BeanFactory.getBeansOfType%E7%9A%84%E5%9D%91/spring-2.png">
 <meta property="og:image" content="https://gukie.github.io/2020/05/07/Spring%E7%9A%84BeanFactory.getBeansOfType%E7%9A%84%E5%9D%91/spring-3.png">
 <meta property="og:image" content="https://gukie.github.io/2020/05/07/Spring%E7%9A%84BeanFactory.getBeansOfType%E7%9A%84%E5%9D%91/spring-4.png">
+<meta property="og:image" content="https://gukie.github.io/2020/05/07/Spring%E7%9A%84BeanFactory.getBeansOfType%E7%9A%84%E5%9D%91/spring-5.png">
 <meta property="og:image" content="https://gukie.github.io/2020/05/07/Spring%E7%9A%84BeanFactory.getBeansOfType%E7%9A%84%E5%9D%91/spring-6.png">
 <meta property="article:published_time" content="2020-05-07T11:12:27.946Z">
 <meta property="article:modified_time" content="2020-05-07T11:12:27.946Z">
@@ -125,8 +126,9 @@
 
 <br>
 <br>这样就会尝试去实例化ReferenceBean了，最后就会走到org.apache.dubbo.config.spring.ReferenceBean#afterPropertiesSet， 由于现在还只是在BeanDefinition处理阶段，还并没有到占位符的设置阶段，所以是读取不到占位符的值的，所以它还是原来的模样: ${zookeeper.address}, 并没有变形<br>
-<br>![image.png](spring-5.png)<br>this<br>
+<br>
 
+<p><img src="/2020/05/07/Spring%E7%9A%84BeanFactory.getBeansOfType%E7%9A%84%E5%9D%91/spring-5.png" alt="image.png"></p>
 <p><a name="up6HB"></a></p>
 <h3 id="解决"><a href="#解决" class="headerlink" title="解决"></a>解决</h3><p>知道问题的原因了: beanFactory.getBeansOfType的参数allowEagerInit=true时会将FactoryBean初始化掉。<br>所以改起来也很简单，就是使用另外一个方法:<br><code>beanFactory.getBeansOfType(IProxyBaseService.class,false, false);</code><br><br><br>最终代码如下：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">postProcessBeanFactory</span><span class="params">(ConfigurableListableBeanFactory beanFactory)</span> <span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line"></span><br><span class="line">        Map&lt;String, IProxyBaseService&gt; nameInstanceMap = beanFactory.getBeansOfType(IProxyBaseService<span class="class">.<span class="keyword">class</span>,<span class="title">false</span>, <span class="title">false</span>)</span>;</span><br><span class="line">        <span class="keyword">if</span> (MapUtils.isEmpty(nameInstanceMap)) &#123;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        nameInstanceMap.forEach((beanName, beanInstance) -&gt; &#123;</span><br><span class="line">            Set&lt;Class&lt;?&gt;&gt; interfaces = ClassUtils.getAllInterfacesAsSet(beanInstance);</span><br><span class="line">            <span class="keyword">if</span> (CollectionUtils.isEmpty(interfaces)) &#123;</span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">for</span> (Class&lt;?&gt; interfaceCls : interfaces) &#123;</span><br><span class="line">                <span class="keyword">if</span> (!ClassUtils.isAssignable(IProxyBaseService<span class="class">.<span class="keyword">class</span>, <span class="title">interfaceCls</span>)) </span>&#123;</span><br><span class="line">                    <span class="keyword">continue</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                checkInterfaceMethods(interfaceCls);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
@@ -134,7 +136,7 @@
 <br>
 
 <p><a name="LfS6k"></a></p>
-<h3 id="事情还在急需"><a href="#事情还在急需" class="headerlink" title="事情还在急需"></a>事情还在急需</h3><p><br>然而事情并没有那么简单，在后面的测试中，会发现，实现了IProxyBaseService的类，其field都是null.<br><img src="/2020/05/07/Spring%E7%9A%84BeanFactory.getBeansOfType%E7%9A%84%E5%9D%91/spring-6.png" alt="image.png"><br><br><br>这很严重啊。既然是都为空，那么看看它是什么时候进行初始化的，然后找了一个类，在其后面加了个InitializingBean进行断点调试</p>
+<h3 id="事情还在继续"><a href="#事情还在继续" class="headerlink" title="事情还在继续"></a>事情还在继续</h3><p><br>然而事情并没有那么简单，在后面的测试中，会发现，实现了IProxyBaseService的类，其field都是null.<br><img src="/2020/05/07/Spring%E7%9A%84BeanFactory.getBeansOfType%E7%9A%84%E5%9D%91/spring-6.png" alt="image.png"><br><br><br>这很严重啊。既然是都为空，那么看看它是什么时候进行初始化的，然后找了一个类，在其后面加了个InitializingBean进行断点调试</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DeviceProxyServiceImpl</span> <span class="keyword">implements</span> <span class="title">IDeviceProxyService</span>, <span class="title">InitializingBean</span></span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">afterPropertiesSet</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        log.info(<span class="string">"...."</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <br>
@@ -158,7 +160,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://gukie.github.io/2020/05/07/Spring%E7%9A%84BeanFactory.getBeansOfType%E7%9A%84%E5%9D%91/" data-id="cka16ii1r0001exus7ckr2cac" class="article-share-link">Share</a>
+      <a data-url="https://gukie.github.io/2020/05/07/Spring%E7%9A%84BeanFactory.getBeansOfType%E7%9A%84%E5%9D%91/" data-id="cka16p8vm0001hlus3lu96jit" class="article-share-link">Share</a>
       
       
     </footer>
