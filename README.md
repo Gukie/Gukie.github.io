@@ -1,1 +1,1 @@
-Hi buddy, welcome to visit: https://gukie.github.io/, thanks for your time.
+README.md

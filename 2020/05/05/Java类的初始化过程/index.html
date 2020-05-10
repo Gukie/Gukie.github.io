@@ -7,17 +7,17 @@
   
   <title>Java类的初始化过程 | Hi buddy, look at you...</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="类的整个生命周期过程 加载 连接 校验 准备 解析   初始化 使用 卸载    类创建过程主要分两步骤 类的加载过程, 本质上是在方法区生成类的Class对象，共其他地方引用使用 类的实例化   次序 次序是: 先自己的变量-&gt;父类-&gt;初始化 接口跟类不一样，接口只有在使用到的时候才会去初始化，而类即使没有使用到也会在它的子类初始化的时候被初始化出来   类加载过程加载过程">
+  <meta name="description" content="类的整个生命周期过程 加载 连接 校验 准备 解析   初始化 使用 卸载        类创建过程主要分两步骤 类的加载过程, 本质上是在方法区生成类的Class对象，共其他地方引用使用 类的实例化   次序 次序是: 先自己的变量-&gt;父类-&gt;初始化 接口跟类不一样，接口只有在使用到的时候才会去初始化，而类即使没有使用到也会在它的子类初始化的时候被初始化出来   类加载过程">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Java类的初始化过程">
 <meta property="og:url" content="https://gukie.github.io/2020/05/05/Java%E7%B1%BB%E7%9A%84%E5%88%9D%E5%A7%8B%E5%8C%96%E8%BF%87%E7%A8%8B/index.html">
 <meta property="og:site_name" content="Hi buddy, look at you...">
-<meta property="og:description" content="类的整个生命周期过程 加载 连接 校验 准备 解析   初始化 使用 卸载    类创建过程主要分两步骤 类的加载过程, 本质上是在方法区生成类的Class对象，共其他地方引用使用 类的实例化   次序 次序是: 先自己的变量-&gt;父类-&gt;初始化 接口跟类不一样，接口只有在使用到的时候才会去初始化，而类即使没有使用到也会在它的子类初始化的时候被初始化出来   类加载过程加载过程">
+<meta property="og:description" content="类的整个生命周期过程 加载 连接 校验 准备 解析   初始化 使用 卸载        类创建过程主要分两步骤 类的加载过程, 本质上是在方法区生成类的Class对象，共其他地方引用使用 类的实例化   次序 次序是: 先自己的变量-&gt;父类-&gt;初始化 接口跟类不一样，接口只有在使用到的时候才会去初始化，而类即使没有使用到也会在它的子类初始化的时候被初始化出来   类加载过程">
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://cdn.nlark.com/yuque/0/2019/png/289364/1570284249293-3cdb4e86-b68d-4e9b-94df-e13986f88617.png#align=left&display=inline&height=258&margin=%5Bobject%20Object%5D&name=image.png&originHeight=516&originWidth=1504&size=184431&status=done&style=none&width=752">
 <meta property="og:image" content="https://cdn.nlark.com/yuque/0/2019/svg/289364/1570285683740-cdad0d4a-5344-460d-afe2-78c72994fa30.svg#align=left&display=inline&height=569&margin=%5Bobject%20Object%5D&name=%E7%B1%BB%E7%9A%84%E5%88%9D%E5%A7%8B%E5%8C%96guocheng.svg&originHeight=569&originWidth=1131&size=16899&status=done&style=none&width=1131">
 <meta property="article:published_time" content="2020-05-05T08:44:46.639Z">
-<meta property="article:modified_time" content="2020-05-05T10:09:14.431Z">
+<meta property="article:modified_time" content="2020-05-05T08:44:46.639Z">
 <meta property="article:author" content="古树">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://cdn.nlark.com/yuque/0/2019/png/289364/1570284249293-3cdb4e86-b68d-4e9b-94df-e13986f88617.png#align=left&display=inline&height=258&margin=%5Bobject%20Object%5D&name=image.png&originHeight=516&originWidth=1504&size=184431&status=done&style=none&width=752">
@@ -108,7 +108,11 @@
 <li>使用</li>
 <li>卸载</li>
 </ul>
-<p><img src="https://cdn.nlark.com/yuque/0/2019/png/289364/1570284249293-3cdb4e86-b68d-4e9b-94df-e13986f88617.png#align=left&display=inline&height=258&margin=%5Bobject%20Object%5D&name=image.png&originHeight=516&originWidth=1504&size=184431&status=done&style=none&width=752" alt="image.png"><br /><br><br /><br><br /></p>
+<p><img src="https://cdn.nlark.com/yuque/0/2019/png/289364/1570284249293-3cdb4e86-b68d-4e9b-94df-e13986f88617.png#align=left&display=inline&height=258&margin=%5Bobject%20Object%5D&name=image.png&originHeight=516&originWidth=1504&size=184431&status=done&style=none&width=752" alt="image.png"><br /></p>
+
+<br />
+<br />
+
 <p><a name="E8x6j"></a></p>
 <h3 id="类创建过程主要分两步骤"><a href="#类创建过程主要分两步骤" class="headerlink" title="类创建过程主要分两步骤"></a>类创建过程主要分两步骤</h3><ul>
 <li>类的加载过程, 本质上是在方法区生成类的Class对象，共其他地方引用使用</li>
@@ -203,7 +207,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://gukie.github.io/2020/05/05/Java%E7%B1%BB%E7%9A%84%E5%88%9D%E5%A7%8B%E5%8C%96%E8%BF%87%E7%A8%8B/" data-id="ck9to9uqf0000b0us8u72ehye" class="article-share-link">Share</a>
+      <a data-url="https://gukie.github.io/2020/05/05/Java%E7%B1%BB%E7%9A%84%E5%88%9D%E5%A7%8B%E5%8C%96%E8%BF%87%E7%A8%8B/" data-id="cka130qfk0000waus26gke53k" class="article-share-link">Share</a>
       
       
     </footer>
