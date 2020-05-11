@@ -239,6 +239,168 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://gukie.github.io2020/05/11/%5BAnnotation%5D%20annotation%E5%AE%9A%E4%B9%89%E7%9A%84%E6%80%BB%E7%BB%93/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="古树">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hi buddy, look at you...">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="2020/05/11/%5BAnnotation%5D%20annotation%E5%AE%9A%E4%B9%89%E7%9A%84%E6%80%BB%E7%BB%93/" itemprop="url">[Annotation] annotation定义的总结</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-05-11T14:11:12+08:00">
+                2020-05-11
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="Annotation-annotation定义的总结"><a href="#Annotation-annotation定义的总结" class="headerlink" title="[Annotation] annotation定义的总结"></a>[Annotation] annotation定义的总结</h1><p><a name="tyC3q"></a></p>
+<h3 id="refer"><a href="#refer" class="headerlink" title="refer"></a>refer</h3><ul>
+<li><a href="https://juejin.im/post/5c63e2b0f265da2dd94c8e16" target="_blank" rel="noopener">https://juejin.im/post/5c63e2b0f265da2dd94c8e16</a> （@Inherited 使用注意点）</li>
+</ul>
+<br>
+<br>
+
+
+<table>
+<thead>
+<tr>
+<th><strong>元注解</strong></th>
+<th><strong>作用</strong></th>
+<th><strong>使用注意点</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>@Inherited</td>
+<td>是否可以继承. 即子类是否可以不用定义直接使用父类的注解</td>
+<td>使用@Inherited注意点<br>- @Inherited 并不会从接口中继承，而只会从class中继承<br>- 方法并不从它所重载的方法继承annotation<br></td>
+</tr>
+<tr>
+<td>@Retention</td>
+<td>表示在系统运行的哪个阶段出现</td>
+<td>RetentionPolicy.RUNTIME - 会被compiler记住并且会在JVM 运行时存留<br>RetentionPolicy.<em>CLASS - 会被compiler记住但是不会在JVM中存留</em></td>
+</tr>
+<tr>
+<td>@Documented</td>
+<td>是否在javadoc中出现</td>
+<td></td>
+</tr>
+<tr>
+<td>@Target</td>
+<td>定义的注解可以使用在那些地方</td>
+<td>具体可以查看 ElementType的定义<br>ElementType.<em>METHOD - 可以使用在方法上</em><br>ElementType.<em>TYPE - 可以使用在class/interface上</em></td>
+</tr>
+</tbody></table>
+<p><br>一个完整的例子</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Documented</span></span><br><span class="line"><span class="meta">@Inherited</span></span><br><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="meta">@Target</span>( &#123;ElementType.METHOD, ElementType.TYPE&#125;)</span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> TimeTraceLog &#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">long</span> <span class="title">value</span><span class="params">()</span> <span class="keyword">default</span> 200</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="function">Level <span class="title">level</span><span class="params">()</span> <span class="keyword">default</span> Level.WARN</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<br>
+<br>
+
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://gukie.github.io2020/05/07/Spring%E7%9A%84BeanFactory.getBeansOfType%E7%9A%84%E5%9D%91/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -680,7 +842,7 @@
               
                 <a href="/archives/%20%7C%7C%20archive">
               
-                  <span class="site-state-item-count">2</span>
+                  <span class="site-state-item-count">3</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
