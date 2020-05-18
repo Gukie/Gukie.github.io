@@ -83,7 +83,7 @@
 <meta property="og:type" content="article">
 <meta property="og:title" content="Spring的BeanFactory.getBeansOfType的坑">
 <meta property="og:url" content="https://gukie.github.io/2020/05/07/Spring%E7%9A%84BeanFactory.getBeansOfType%E7%9A%84%E5%9D%91/index.html">
-<meta property="og:site_name" content="Hi buddy, look at you...">
+<meta property="og:site_name" content="村野古树">
 <meta property="og:description" content="背景及问题发现有时候，我们会在spring的bean实例化之前做一些校验，比如校验某些package下的类的命名是否符合规范，此时就会去实现 BeanDefinitionRegistryPostProcessor 做一些事情我们假设，我们需要校验的类都实现了一个interface，名叫: IProxyBaseService， 那么我们很自然的就会有以下思路  获取所有 IProxyBaseSer">
 <meta property="og:image" content="https://gukie.github.io/2020/05/07/Spring%E7%9A%84BeanFactory.getBeansOfType%E7%9A%84%E5%9D%91/spring-1.png">
 <meta property="og:image" content="https://gukie.github.io/2020/05/07/Spring%E7%9A%84BeanFactory.getBeansOfType%E7%9A%84%E5%9D%91/spring-2.png">
@@ -133,7 +133,7 @@
 
 
 
-  <title>Spring的BeanFactory.getBeansOfType的坑 | Hi buddy, look at you...</title>
+  <title>Spring的BeanFactory.getBeansOfType的坑 | 村野古树</title>
   
 
 
@@ -173,12 +173,12 @@
     <div class="custom-logo-site-title">
       <a href="/"  class="brand" rel="start">
         <span class="logo-line-before"><i></i></span>
-        <span class="site-title">Hi buddy, look at you...</span>
+        <span class="site-title">村野古树</span>
         <span class="logo-line-after"><i></i></span>
       </a>
     </div>
       
-        <p class="site-subtitle"></p>
+        <p class="site-subtitle">keep busy living or keep busy dying</p>
       
   </div>
 
@@ -313,11 +313,11 @@
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="古树">
       <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="image" content="/images/shawsshank-2.png">
     </span>
 
     <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Hi buddy, look at you...">
+      <meta itemprop="name" content="村野古树">
     </span>
 
     
@@ -571,8 +571,12 @@
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
+              <img class="site-author-image" itemprop="image"
+                src="/images/shawsshank-2.png"
+                alt="古树" />
+            
               <p class="site-author-name" itemprop="name">古树</p>
-              <p class="site-description motion-element" itemprop="description"></p>
+              <p class="site-description motion-element" itemprop="description">Hi buddy, look at you...</p>
           </div>
 
           <nav class="site-state motion-element">
