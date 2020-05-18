@@ -402,51 +402,33 @@
       
         
           
-            <h1 id="Annotation-annotation定义的总结"><a href="#Annotation-annotation定义的总结" class="headerlink" title="[Annotation] annotation定义的总结"></a>[Annotation] annotation定义的总结</h1><p><a name="tyC3q"></a></p>
-<h3 id="refer"><a href="#refer" class="headerlink" title="refer"></a>refer</h3><ul>
-<li><a href="https://juejin.im/post/5c63e2b0f265da2dd94c8e16" target="_blank" rel="noopener">https://juejin.im/post/5c63e2b0f265da2dd94c8e16</a> （@Inherited 使用注意点）</li>
-</ul>
-<br>
-<br>
+          [Annotation] annotation定义的总结
+refer
+https://juejin.im/post/5c63e2b0f265da2dd94c8e16 （@Inherited 使用注意点）
 
 
-<table>
-<thead>
-<tr>
-<th><strong>元注解</strong></th>
-<th><strong>作用</strong></th>
-<th><strong>使用注意点</strong></th>
-</tr>
-</thead>
-<tbody><tr>
-<td>@Inherited</td>
-<td>是否可以继承. 即子类是否可以不用定义直接使用父类的注解</td>
-<td>使用@Inherited注意点<br>- @Inherited 并不会从接口中继承，而只会从class中继承<br>- 方法并不从它所重载的方法继承annotation<br></td>
-</tr>
-<tr>
-<td>@Retention</td>
-<td>表示在系统运行的哪个阶段出现</td>
-<td>RetentionPolicy.RUNTIME - 会被compiler记住并且会在JVM 运行时存留<br>RetentionPolicy.<em>CLASS - 会被compiler记住但是不会在JVM中存留</em></td>
-</tr>
-<tr>
-<td>@Documented</td>
-<td>是否在javadoc中出现</td>
-<td></td>
-</tr>
-<tr>
-<td>@Target</td>
-<td>定义的注解可以使用在那些地方</td>
-<td>具体可以查看 ElementType的定义<br>ElementType.<em>METHOD - 可以使用在方法上</em><br>ElementType.<em>TYPE - 可以使用在class/interface上</em></td>
-</tr>
-</tbody></table>
-<p><br>一个完整的例子</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Documented</span></span><br><span class="line"><span class="meta">@Inherited</span></span><br><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="meta">@Target</span>( &#123;ElementType.METHOD, ElementType.TYPE&#125;)</span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> TimeTraceLog &#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">long</span> <span class="title">value</span><span class="params">()</span> <span class="keyword">default</span> 200</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="function">Level <span class="title">level</span><span class="params">()</span> <span class="keyword">default</span> Level.WARN</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<br>
-<br>
 
 
-          
+
+
+
+
+元注解
+作用
+使用注意点
+
+
+
+@Inherited
+是否可以继承. 即子类是否
+          ...
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2020/05/16/%5BAnnotation%5D%20annotation%E5%AE%9A%E4%B9%89%E7%9A%84%E6%80%BB%E7%BB%93/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -586,67 +568,16 @@
       
         
           
-            <p><a name="MojXv"></a></p>
-<h3 id="背景及问题发现"><a href="#背景及问题发现" class="headerlink" title="背景及问题发现"></a>背景及问题发现</h3><p>有时候，我们会在spring的bean实例化之前做一些校验，比如校验某些package下的类的命名是否符合规范，此时就会去实现 BeanDefinitionRegistryPostProcessor 做一些事情<br><br><br>我们假设，我们需要校验的类都实现了一个interface，名叫: IProxyBaseService， 那么我们很自然的就会有以下思路</p>
-<ul>
-<li>获取所有 IProxyBaseService的bean的定义</li>
-<li>通过该bean找到对应的class，然后通过反射校验他们的方法是否合规</li>
-</ul>
-<p><br>代码如下</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">postProcessBeanFactory</span><span class="params">(ConfigurableListableBeanFactory beanFactory)</span> <span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line"></span><br><span class="line">        Map&lt;String, IProxyBaseService&gt; nameInstanceMap = beanFactory.getBeansOfType(IProxyBaseService<span class="class">.<span class="keyword">class</span>)</span>;</span><br><span class="line">        <span class="keyword">if</span> (MapUtils.isEmpty(nameInstanceMap)) &#123;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        nameInstanceMap.forEach((beanName, beanInstance) -&gt; &#123;</span><br><span class="line">            Set&lt;Class&lt;?&gt;&gt; interfaces = ClassUtils.getAllInterfacesAsSet(beanInstance);</span><br><span class="line">            <span class="keyword">if</span> (CollectionUtils.isEmpty(interfaces)) &#123;</span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">for</span> (Class&lt;?&gt; interfaceCls : interfaces) &#123;</span><br><span class="line">                <span class="keyword">if</span> (!ClassUtils.isAssignable(IProxyBaseService<span class="class">.<span class="keyword">class</span>, <span class="title">interfaceCls</span>)) </span>&#123;</span><br><span class="line">                    <span class="keyword">continue</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                checkInterfaceMethods(interfaceCls);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-
-<p><br>如果系统中使用了dubbo，那么坑就来了: 当果你的dubbo的配置是通过占位符来做的，那么你将获取不到对应占位符的值</p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dubbo:registry</span> <span class="attr">protocol</span>=<span class="string">"zookeeper"</span> <span class="attr">address</span>=<span class="string">"$&#123;zookeeper.address&#125;"</span>/&gt;</span></span><br></pre></td></tr></table></figure>
-<p>最后报以下错误:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Caused by: java.lang.IllegalStateException: zookeeper not connected</span><br><span class="line">    at org.apache.dubbo.remoting.zookeeper.curator.CuratorZookeeperClient.&lt;init&gt;(CuratorZookeeperClient.java:83)</span><br><span class="line">    at org.apache.dubbo.remoting.zookeeper.curator.CuratorZookeeperTransporter.createZookeeperClient(CuratorZookeeperTransporter.java:26)</span><br><span class="line">    at org.apache.dubbo.remoting.zookeeper.support.AbstractZookeeperTransporter.connect(AbstractZookeeperTransporter.java:68)</span><br><span class="line">    at org.apache.dubbo.remoting.zookeeper.ZookeeperTransporter$Adaptive.connect(ZookeeperTransporter$Adaptive.java)</span><br><span class="line">    at org.apache.dubbo.configcenter.support.zookeeper.ZookeeperDynamicConfiguration.&lt;init&gt;(ZookeeperDynamicConfiguration.java:62)</span><br><span class="line">    at org.apache.dubbo.configcenter.support.zookeeper.ZookeeperDynamicConfigurationFactory.createDynamicConfiguration(ZookeeperDynamicConfigurationFactory.java:37)</span><br></pre></td></tr></table></figure>
-
-<p><br>这时候如果没有认真debug过，会认为zk链接不上了，然后把问题指向zk，从而偏离了问题的本质<br></p>
-<p><a name="MERTr"></a></p>
-<h3 id="排查过程"><a href="#排查过程" class="headerlink" title="排查过程"></a>排查过程</h3><p>从报错看，我们可以讲断点放在 <code>CuratorZookeeperClient.java:83</code>， 然后会发现，此时的地址都是占位符的<br><img src="/2020/05/07/Spring%E7%9A%84BeanFactory.getBeansOfType%E7%9A%84%E5%9D%91/spring-1.png" alt="image.png"><br><br><br>此时我们可以将我们自己写的代码注释掉，看看结果是什么样的，会发现其实是有值的，那么可以断定是代码的问题<br><img src="/2020/05/07/Spring%E7%9A%84BeanFactory.getBeansOfType%E7%9A%84%E5%9D%91/spring-2.png" alt="image.png"><br><br><br><br><br><br><br>经过排查，发现这一行代码有问题</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Map&lt;String, IProxyBaseService&gt; nameInstanceMap = beanFactory.getBeansOfType(IProxyBaseService<span class="class">.<span class="keyword">class</span>)</span>;</span><br></pre></td></tr></table></figure>
-<p>该代码会去找IProxyBaseService类的bean，但是它是使用了缺省参数的方法:<br>org.springframework.beans.factory.support.DefaultListableBeanFactory#getBeansOfType<br><img src="/2020/05/07/Spring%E7%9A%84BeanFactory.getBeansOfType%E7%9A%84%E5%9D%91/spring-3.png" alt="image.png"><br><br><br>再往下会发现<br>org.springframework.beans.factory.support.DefaultListableBeanFactory#doGetBeanNamesForType</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 这里的 allowEagerInit 会让条件为true</span></span><br><span class="line"><span class="keyword">if</span> (!mbd.isAbstract() &amp;&amp; (allowEagerInit ||</span><br><span class="line">        (mbd.hasBeanClass() || !mbd.isLazyInit() || isAllowEagerClassLoading()) &amp;&amp;</span><br><span class="line">                !requiresEagerInitForType(mbd.getFactoryBeanName()))) &#123;</span><br><span class="line">    <span class="comment">// In case of FactoryBean, match object created by FactoryBean.</span></span><br><span class="line">    <span class="keyword">boolean</span> isFactoryBean = isFactoryBean(beanName, mbd);</span><br><span class="line">    BeanDefinitionHolder dbd = mbd.getDecoratedDefinition();</span><br><span class="line">    <span class="keyword">boolean</span> matchFound =</span><br><span class="line">            (allowEagerInit || !isFactoryBean ||</span><br><span class="line">                    (dbd != <span class="keyword">null</span> &amp;&amp; !mbd.isLazyInit()) || containsSingleton(beanName)) &amp;&amp;</span><br><span class="line">            (includeNonSingletons ||</span><br><span class="line">                    (dbd != <span class="keyword">null</span> ? mbd.isSingleton() : isSingleton(beanName))) &amp;&amp;</span><br><span class="line">        <span class="comment">// 会进入到这里去  </span></span><br><span class="line">        isTypeMatch(beanName, type);</span><br><span class="line">    <span class="keyword">if</span> (!matchFound &amp;&amp; isFactoryBean) &#123;</span><br><span class="line">        <span class="comment">// In case of FactoryBean, try to match FactoryBean instance itself next.</span></span><br><span class="line">        beanName = FACTORY_BEAN_PREFIX + beanName;</span><br><span class="line">        matchFound = (includeNonSingletons || mbd.isSingleton()) &amp;&amp; isTypeMatch(beanName, type);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (matchFound) &#123;</span><br><span class="line">        result.add(beanName);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p><br>然后会进入到<br>org.springframework.beans.factory.support.AbstractBeanFactory#isTypeMatch的以下代码段</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 这里会校验当前类是否是FactoryBean</span></span><br><span class="line"><span class="keyword">if</span> (FactoryBean<span class="class">.<span class="keyword">class</span>.<span class="title">isAssignableFrom</span>(<span class="title">beanType</span>)) </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (!BeanFactoryUtils.isFactoryDereference(name)) &#123;</span><br><span class="line">        <span class="comment">// If it's a FactoryBean, we want to look at what it creates, not the factory class.</span></span><br><span class="line">        beanType = getTypeForFactoryBean(beanName, mbd);</span><br><span class="line">        <span class="keyword">if</span> (beanType == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p><br><img src="/2020/05/07/Spring%E7%9A%84BeanFactory.getBeansOfType%E7%9A%84%E5%9D%91/spring-4.png" alt="image.png"><br>而org.apache.dubbo.config.spring.ReferenceBean 正好是一个FactoryBean</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ReferenceBean</span>&lt;<span class="title">T</span>&gt; <span class="keyword">extends</span> <span class="title">ReferenceConfig</span>&lt;<span class="title">T</span>&gt; <span class="keyword">implements</span> <span class="title">FactoryBean</span>, <span class="title">ApplicationContextAware</span>, <span class="title">InitializingBean</span>, <span class="title">DisposableBean</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<br>
-<br>这样就会尝试去实例化ReferenceBean了，最后就会走到org.apache.dubbo.config.spring.ReferenceBean#afterPropertiesSet， 由于现在还只是在BeanDefinition处理阶段，还并没有到占位符的设置阶段，所以是读取不到占位符的值的，所以它还是原来的模样: ${zookeeper.address}, 并没有变形<br>
-<br>
-
-<p><img src="/2020/05/07/Spring%E7%9A%84BeanFactory.getBeansOfType%E7%9A%84%E5%9D%91/spring-5.png" alt="image.png"></p>
-<p><a name="up6HB"></a></p>
-<h3 id="解决"><a href="#解决" class="headerlink" title="解决"></a>解决</h3><p>知道问题的原因了: beanFactory.getBeansOfType的参数allowEagerInit=true时会将FactoryBean初始化掉。<br>所以改起来也很简单，就是使用另外一个方法:<br><code>beanFactory.getBeansOfType(IProxyBaseService.class,false, false);</code><br><br><br>最终代码如下：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">postProcessBeanFactory</span><span class="params">(ConfigurableListableBeanFactory beanFactory)</span> <span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line"></span><br><span class="line">        Map&lt;String, IProxyBaseService&gt; nameInstanceMap = beanFactory.getBeansOfType(IProxyBaseService<span class="class">.<span class="keyword">class</span>,<span class="title">false</span>, <span class="title">false</span>)</span>;</span><br><span class="line">        <span class="keyword">if</span> (MapUtils.isEmpty(nameInstanceMap)) &#123;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        nameInstanceMap.forEach((beanName, beanInstance) -&gt; &#123;</span><br><span class="line">            Set&lt;Class&lt;?&gt;&gt; interfaces = ClassUtils.getAllInterfacesAsSet(beanInstance);</span><br><span class="line">            <span class="keyword">if</span> (CollectionUtils.isEmpty(interfaces)) &#123;</span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">for</span> (Class&lt;?&gt; interfaceCls : interfaces) &#123;</span><br><span class="line">                <span class="keyword">if</span> (!ClassUtils.isAssignable(IProxyBaseService<span class="class">.<span class="keyword">class</span>, <span class="title">interfaceCls</span>)) </span>&#123;</span><br><span class="line">                    <span class="keyword">continue</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                checkInterfaceMethods(interfaceCls);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-
-<br>
-
-<p><a name="LfS6k"></a></p>
-<h3 id="事情还在继续"><a href="#事情还在继续" class="headerlink" title="事情还在继续"></a>事情还在继续</h3><p><br>然而事情并没有那么简单，在后面的测试中，会发现，实现了IProxyBaseService的类，其field都是null.<br><img src="/2020/05/07/Spring%E7%9A%84BeanFactory.getBeansOfType%E7%9A%84%E5%9D%91/spring-6.png" alt="image.png"><br><br><br>这很严重啊。既然是都为空，那么看看它是什么时候进行初始化的，然后找了一个类，在其后面加了个InitializingBean进行断点调试</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DeviceProxyServiceImpl</span> <span class="keyword">implements</span> <span class="title">IDeviceProxyService</span>, <span class="title">InitializingBean</span></span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">afterPropertiesSet</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        log.info(<span class="string">"...."</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<br>
-<br>debug后，发现这是从 beanFactory.getBeansOfType(IProxyBaseService.class,false, false); 调用过来的。<br>代码如下: org.springframework.beans.factory.support.DefaultListableBeanFactory#getBeansOfType<br>
-
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> &lt;T&gt; <span class="function">Map&lt;String, T&gt; <span class="title">getBeansOfType</span><span class="params">(Class&lt;T&gt; type, <span class="keyword">boolean</span> includeNonSingletons, <span class="keyword">boolean</span> allowEagerInit)</span></span></span><br><span class="line"><span class="function">            <span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line">        <span class="comment">// 1.这一行，是FactoryBean初始化的问题的根源</span></span><br><span class="line">        String[] beanNames = getBeanNamesForType(type, includeNonSingletons, allowEagerInit);</span><br><span class="line">        </span><br><span class="line">        Map&lt;String, T&gt; result = <span class="keyword">new</span> LinkedHashMap&lt;String, T&gt;(beanNames.length);</span><br><span class="line">        <span class="comment">// 2.可是事情并没有完，当找出了IProxyBaseService这个类的beanName之后，就到了这</span></span><br><span class="line">        <span class="keyword">for</span> (String beanName : beanNames) &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">               <span class="comment">// 这里有一个getBean，然后就会去创建bean. 而此时bean都还没有实例化出来，所以都是null </span></span><br><span class="line">                result.put(beanName, getBean(beanName, type));</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">catch</span> (BeanCreationException ex) &#123;</span><br><span class="line">                ...</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> result;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-
-<p><br>解决方法是, 不使用beanFactory.getBeansOfType， 而是使用BeanDefinitionRegistry去获取对应的beanName，然后找到对应的class做自己的业务</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">postProcessBeanDefinitionRegistry</span><span class="params">(BeanDefinitionRegistry registry)</span> <span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line">       String[] beanNames = registry.getBeanDefinitionNames();</span><br><span class="line">       <span class="keyword">if</span> (beanNames == <span class="keyword">null</span> || beanNames.length &lt; <span class="number">1</span>) &#123;</span><br><span class="line">           <span class="keyword">return</span>;</span><br><span class="line">       &#125;</span><br><span class="line">       <span class="keyword">for</span> (String beanName : beanNames) &#123;</span><br><span class="line">           BeanDefinition beanDefinition = registry.getBeanDefinition(beanName);</span><br><span class="line">           String beanClsName = beanDefinition.getBeanClassName();</span><br><span class="line">           <span class="keyword">if</span> (!StringUtils.contains(beanClsName, <span class="string">"com.xxx.impl"</span>)) &#123;</span><br><span class="line">               <span class="keyword">continue</span>;</span><br><span class="line">           &#125;</span><br><span class="line"></span><br><span class="line">           Class cls = ClassUtils.resolveClassName(beanClsName, Thread.currentThread().getContextClassLoader());</span><br><span class="line">           Set&lt;Class&lt;?&gt;&gt; interfaces = ClassUtils.getAllInterfacesAsSet(cls);</span><br><span class="line">           <span class="keyword">if</span> (CollectionUtils.isEmpty(interfaces)) &#123;</span><br><span class="line">               <span class="keyword">continue</span>;</span><br><span class="line">           &#125;</span><br><span class="line">           <span class="keyword">for</span> (Class&lt;?&gt; interfaceCls : interfaces) &#123;</span><br><span class="line">               <span class="keyword">if</span> (!ClassUtils.isAssignable(IProxyBaseService<span class="class">.<span class="keyword">class</span>, <span class="title">interfaceCls</span>)) </span>&#123;</span><br><span class="line">                   <span class="keyword">continue</span>;</span><br><span class="line">               &#125;</span><br><span class="line">               checkInterfaceMethods(interfaceCls);</span><br><span class="line">           &#125;</span><br><span class="line">       &#125;</span><br><span class="line"></span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
-
-<br>
-
-<p><a name="dyGDj"></a></p>
-<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><ul>
-<li>在bean没有实例化好的时候，不能随便使用beanFactory.getBeansOfType这个方法，这个会坑死人的</li>
-<li>在bean没有实例化时做一些校验，能减少系统资源的开销(链接创建/资源分配等)，但实现的时候需要千万小心</li>
-</ul>
-<br>
-
-
           
+背景及问题发现有时候，我们会在spring的bean实例化之前做一些校验，比如校验某些package下的类的命名是否符合规范，此时就会去实现 BeanDefinitionRegistryPostProcessor 做一些事情我们假设，我们需要校验的类都实现了一个interface，名叫: IPro
+          ...
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2020/05/07/Spring%E7%9A%84BeanFactory.getBeansOfType%E7%9A%84%E5%9D%91/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -797,119 +728,44 @@
       
         
           
-            <br>
-<br>
-<br>
-
-<p><a name="atHd5"></a></p>
-<h3 id="类的整个生命周期过程"><a href="#类的整个生命周期过程" class="headerlink" title="类的整个生命周期过程"></a>类的整个生命周期过程</h3><ul>
-<li>加载</li>
-<li>连接<ul>
-<li>校验</li>
-<li>准备</li>
-<li>解析</li>
-</ul>
-</li>
-<li>初始化</li>
-<li>使用</li>
-<li>卸载</li>
-</ul>
-<p><img src="/2020/05/05/Java%E7%B1%BB%E7%9A%84%E5%88%9D%E5%A7%8B%E5%8C%96%E8%BF%87%E7%A8%8B/linkage.png" alt="image.png"></p>
-<br>
-<br>
-
-<p><a name="E8x6j"></a></p>
-<h3 id="类创建过程主要分两步骤"><a href="#类创建过程主要分两步骤" class="headerlink" title="类创建过程主要分两步骤"></a>类创建过程主要分两步骤</h3><ul>
-<li>类的加载过程, 本质上是在方法区生成类的Class对象，共其他地方引用使用</li>
-<li>类的实例化</li>
-</ul>
-<p><a name="l282i"></a></p>
-<h4 id="次序"><a href="#次序" class="headerlink" title="次序"></a>次序</h4><ul>
-<li>次序是: 先自己的变量-&gt;父类-&gt;初始化</li>
-<li>接口跟类不一样，接口只有在使用到的时候才会去初始化，而类即使没有使用到也会在它的子类初始化的时候被初始化出来</li>
-</ul>
-<p><a name="k5GKh"></a></p>
-<h4 id="类加载过程"><a href="#类加载过程" class="headerlink" title="类加载过程"></a>类加载过程</h4><p>加载过程主要是对class的加载，不包含实例的初始化过程，所以操作的内存区域是方法区，这个过程主要包括：</p>
-<ul>
-<li>加载，将字节码文件加载到内存中来(比如从jar包中加载，从URL中加载)</li>
-<li>连接(link)<ul>
-<li>校验(verify): 校验字节码是否符合规范，比如<ul>
-<li>是否以魔数0xCAFEBABE开头</li>
-<li>major/minor version是否是当前JVM支持的</li>
-</ul>
-</li>
-<li>准备(prepare)，该阶段主要是给class的初始化做内存准备(静态变量)，比如<ul>
-<li>为类变量(非实例变量)分配内存</li>
-<li>为类变量赋予零值，比如int会给个0</li>
-<li>对于final的类变量，这个阶段会直接给变量赋值而不是给初始值</li>
-</ul>
-</li>
-<li>解析(resolve)，该阶段主要是解析该类引用的其他类，并将它们加载进来</li>
-</ul>
-</li>
-<li>初始化<ul>
-<li>对静态变量进行初始化</li>
-<li>这个阶段会初始化静态变量和调用静态代码块</li>
-<li>他们之间谁先谁后，取决于他们在源码中的先后顺序</li>
-</ul>
-</li>
-</ul>
-<br>
-
-<p><a name="izS7T"></a></p>
-<h4 id="实例的初始化过程"><a href="#实例的初始化过程" class="headerlink" title="实例的初始化过程"></a>实例的初始化过程</h4><ul>
-<li>为实例变量分配内存，主要是堆中</li>
-<li>给实例变量分配初始值</li>
-<li>实例化父类</li>
-<li>给实例变量赋予源码中的值, 调用实例块 (他们的先后顺序取决于他们在源码中的位置)</li>
-<li>执行构造方法中剩余的代码</li>
-</ul>
-<br>
-
-<p><a name="Yqlqk"></a></p>
-<h3 id="实例创建的整个过程"><a href="#实例创建的整个过程" class="headerlink" title="实例创建的整个过程"></a>实例创建的整个过程</h3><p><img src="/2020/05/05/Java%E7%B1%BB%E7%9A%84%E5%88%9D%E5%A7%8B%E5%8C%96%E8%BF%87%E7%A8%8B/process.svg" alt="类的初始化guocheng.svg"><br><br><br><br><br></p>
-<p><a name="GYm9T"></a></p>
-<h3 id="一些注意事项"><a href="#一些注意事项" class="headerlink" title="一些注意事项"></a>一些注意事项</h3><p><a name="R8DyH"></a></p>
-<h4 id="1-被动引用不会触发初始化"><a href="#1-被动引用不会触发初始化" class="headerlink" title="1. 被动引用不会触发初始化"></a>1. 被动引用不会触发初始化</h4><p>被动加载是相对主动加载来说的，主动加载是Java虚拟机规范中定义的几种类型:</p>
-<ul>
-<li>通过new/getstatic/putstatic/invokestatic指令触发的初始化</li>
-<li>通过反射调用类的方法触发的初始化</li>
-<li>在加载子类的时候，发现父类没有加载而触发的父类加载</li>
-<li>调用类的main方法导致该类的初始化</li>
-</ul>
-<p><a name="iGhLB"></a></p>
-<h5 id="1-1-通过子类引用父类的静态变量，不会导致子类的初始化"><a href="#1-1-通过子类引用父类的静态变量，不会导致子类的初始化" class="headerlink" title="1.1 通过子类引用父类的静态变量，不会导致子类的初始化"></a>1.1 通过子类引用父类的静态变量，不会导致子类的初始化</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ParentClass</span> </span>&#123;</span><br><span class="line">    <span class="keyword">static</span> &#123;</span><br><span class="line">        System.out.println(<span class="string">"Parent Class static block"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">int</span> value = <span class="number">13</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SubClass</span> <span class="keyword">extends</span> <span class="title">ParentClass</span> </span>&#123;</span><br><span class="line">    <span class="keyword">static</span> &#123;</span><br><span class="line">        System.out.println(<span class="string">"SubClass static block"</span>);</span><br><span class="line">    &#125;   </span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">NotInitializingTest</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">		System.out.println(SubClass.value);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p><br>以上代码只会初始化ParentClass，不会初始化SubClass. 输出的结果:<br></p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Parent Class static block</span><br><span class="line">13</span><br></pre></td></tr></table></figure>
-
-<br>
-<br>
-
-<p><a name="X2MeK"></a></p>
-<h5 id="1-2-通过数组定义来引用类，不会触发类的初始化"><a href="#1-2-通过数组定义来引用类，不会触发类的初始化" class="headerlink" title="1.2 通过数组定义来引用类，不会触发类的初始化"></a>1.2 通过数组定义来引用类，不会触发类的初始化</h5><p>数组的生成其实并没有生成数组元素的类，生成的是数组类, 比如 “[java.lang.Integer” 这样的类.<br></p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ParentClass</span> </span>&#123;</span><br><span class="line">    <span class="keyword">static</span> &#123;</span><br><span class="line">        System.out.println(<span class="string">"Parent Class static block"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">int</span> value = <span class="number">13</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SubClass</span> <span class="keyword">extends</span> <span class="title">ParentClass</span> </span>&#123;</span><br><span class="line">    <span class="keyword">static</span> &#123;</span><br><span class="line">        System.out.println(<span class="string">"SubClass static block"</span>);</span><br><span class="line">    &#125;   </span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">NotInitializingTest</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">		SubClass[] subClasses = <span class="keyword">new</span> SubClass[<span class="number">1</span>];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p><br>运行之后发现，什么也没有输出，说明<code>SubClass[] subClasses = new SubClass[1];</code>跟 SubClass没有关系<br></p>
-<p><a name="tcfKs"></a></p>
-<h5 id="1-3-引用常量不会触发定义常量的类的初始化"><a href="#1-3-引用常量不会触发定义常量的类的初始化" class="headerlink" title="1.3 引用常量不会触发定义常量的类的初始化"></a>1.3 引用常量不会触发定义常量的类的初始化</h5><p>常量是只那些 final static的变量，这些变量会在准备阶段就初始化好，然后就会进入常量池里，之后其实就跟它所在的类没什么关系了. 后面其他类引用它的时候其实是从常量池中获取的.<br></p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ConstantClass</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> &#123;</span><br><span class="line">        System.out.println(<span class="string">"constant class init"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String DEFAULT_NAME = <span class="string">"kobe"</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">NotInitializingTest</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">		System.out.println(ConstantClass.DEFAULT_NAME);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-<p><a name="sA9wT"></a></p>
-<h3 id="2-父子类中override方法的执行"><a href="#2-父子类中override方法的执行" class="headerlink" title="2. 父子类中override方法的执行"></a>2. 父子类中override方法的执行</h3><p>当子类override了父类的方法的时候，在构造子类的实例阶段，父类调用的是子类的方法<br></p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ParentClass</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ParentClass</span><span class="params">()</span></span>&#123;</span><br><span class="line">        printThree();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">printThree</span><span class="params">()</span></span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"three"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SubClass</span> <span class="keyword">extends</span> <span class="title">ParentClass</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span>  <span class="keyword">int</span> three = <span class="number">3</span>;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">SubClass</span><span class="params">()</span></span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"SubClass Constructor"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">printThree</span><span class="params">()</span></span>&#123;</span><br><span class="line">        System.out.println(three);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">InitializingTest</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        SubClass subClass = <span class="keyword">new</span> SubClass();</span><br><span class="line">        subClass.printThree();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p><br>输出的结果:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">0</span><br><span class="line">SubClass Constructor</span><br><span class="line">3</span><br></pre></td></tr></table></figure>
-<p>这是因为在父类构造的时候，调用的是子类的printThree()，而此时three=0<br><br><br></p>
-<p><a name="jVwYo"></a></p>
-<h4 id="一个完整的实例构造例子"><a href="#一个完整的实例构造例子" class="headerlink" title="一个完整的实例构造例子"></a>一个完整的实例构造例子</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ParentClass</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> &#123;</span><br><span class="line">        System.out.println(<span class="string">"Parent Class static block"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">int</span> value = <span class="number">13</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    &#123;</span><br><span class="line">        System.out.println(<span class="string">"Parent Class instance block"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span>  <span class="keyword">int</span> k = <span class="number">20</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ParentClass</span><span class="params">()</span></span>&#123;</span><br><span class="line">        printThree();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">printThree</span><span class="params">()</span></span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"three"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SubClass</span> <span class="keyword">extends</span> <span class="title">ParentClass</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> String staticBefore = staticP(<span class="string">"before"</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> &#123;</span><br><span class="line">        System.out.println(<span class="string">"SubClass static block"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> String staticAfter = staticP(<span class="string">"after"</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> String instanceBefore = initK(<span class="string">"before"</span>);</span><br><span class="line">    &#123;</span><br><span class="line">        System.out.println(<span class="string">"SubClass instance block"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> String instanceAfter = initK(<span class="string">"after"</span>);</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">int</span> three = <span class="number">3</span>;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> String <span class="title">staticP</span><span class="params">(String i)</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"static param: "</span> + i);</span><br><span class="line">        <span class="keyword">return</span> i;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    SubClass() &#123;</span><br><span class="line">        System.out.println(<span class="string">"SubClass Constructor"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">initK</span><span class="params">(String j)</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"instance param:"</span> + j);</span><br><span class="line">        <span class="keyword">return</span> j;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">printThree</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        System.out.println(three);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">InitializingTest</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        SubClass subClass = <span class="keyword">new</span> SubClass();</span><br><span class="line"></span><br><span class="line">        subClass.printThree();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p><br>输出的结果<br></p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">Parent Class static block</span><br><span class="line">static param: before</span><br><span class="line">SubClass static block</span><br><span class="line">static param: after</span><br><span class="line">Parent Class instance block</span><br><span class="line">0</span><br><span class="line">instance param:before</span><br><span class="line">SubClass instance block</span><br><span class="line">instance param:after</span><br><span class="line">SubClass Constructor</span><br><span class="line">3</span><br></pre></td></tr></table></figure>
-
           
+
+
+
+
+类的整个生命周期过程
+加载
+连接
+校验
+准备
+解析
+
+
+初始化
+使用
+卸载
+
+
+
+
+
+
+类创建过程主要分两步骤
+类的加载过程, 本质上是在方法区生成类的Class对象，共其他地方引用使用
+类的实例化
+
+
+次序
+次序是: 先自己的变量-&gt;父类-&gt;初始化
+接口跟类不一样，接口只有在
+          ...
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2020/05/05/Java%E7%B1%BB%E7%9A%84%E5%88%9D%E5%A7%8B%E5%8C%96%E8%BF%87%E7%A8%8B/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
