@@ -352,7 +352,7 @@
     <title>《领域驱动设计精粹》-读书笔记</title>
     <url>/2020/05/30/%E3%80%8A%E9%A2%86%E5%9F%9F%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%B2%BE%E7%B2%B9%E3%80%8B-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/</url>
     <content><![CDATA[<p><a name="xJ6L8"></a></p>
-<h3 id="chapter-1"><a href="#chapter-1" class="headerlink" title="chapter 1"></a>chapter 1</h3><ul>
+<h3 id="chapter-1-设计"><a href="#chapter-1-设计" class="headerlink" title="chapter 1: 设计"></a>chapter 1: 设计</h3><ul>
 <li>过度设计，毫无设计，都是不可取的；最好的是适度设计，演进式地对设计进行升级改造而不是一蹴而就的</li>
 <li>闭门造车想出来的产品功能，也是不可取的</li>
 <li>不是有效设计就是糟糕的设计，不存在什么“毫无设计”一说</li>
