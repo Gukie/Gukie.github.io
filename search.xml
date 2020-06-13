@@ -1,34 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>HTTPS认证过程</title>
-    <url>/2020/05/19/HTTPS%E8%AE%A4%E8%AF%81%E8%BF%87%E7%A8%8B/</url>
-    <content><![CDATA[<h3 id="refer"><a href="#refer" class="headerlink" title="refer"></a>refer</h3><p>以下两篇文章对HTTPS解析的很详细，有图有真相，很好理解:</p>
-<ul>
-<li><a href="https://www.cnblogs.com/snowater/p/7804889.html" target="_blank" rel="noopener">https://www.cnblogs.com/snowater/p/7804889.html</a></li>
-<li><a href="https://www.cnblogs.com/xdyixia/p/11610102.html" target="_blank" rel="noopener">https://www.cnblogs.com/xdyixia/p/11610102.html</a></li>
-</ul>
-<h3 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h3><p>HTTPS是在HTTP跟TCP之间加了一层对数据进行加解密的SSL/TLS</p>
-<ul>
-<li>SSL: Secure Sockets Layer</li>
-<li>TLS: Transport Layer Security</li>
-</ul>
-<p><br>HTTPS认证过程, 主要有三部分</p>
-<ul>
-<li>Server证书的认证阶段, 即得到CA机构的签名</li>
-<li>Server跟Client之间通过非对称的方式验证彼此身份</li>
-<li>Server跟Client之间通过双方认同的随机数做对称加密数据传输</li>
-</ul>
-<p><br><img src="https-1.svg" alt="证书的认证，以及HTTPS的工作流程.svg"></p>
-]]></content>
-      <categories>
-        <category>https</category>
-      </categories>
-      <tags>
-        <tag>https</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Java类的初始化过程</title>
     <url>/2020/05/05/Java%E7%B1%BB%E7%9A%84%E5%88%9D%E5%A7%8B%E5%8C%96%E8%BF%87%E7%A8%8B/</url>
     <content><![CDATA[<br>
@@ -149,6 +121,34 @@
       </categories>
       <tags>
         <tag>java</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>HTTPS认证过程</title>
+    <url>/2020/05/19/HTTPS%E8%AE%A4%E8%AF%81%E8%BF%87%E7%A8%8B/</url>
+    <content><![CDATA[<h3 id="refer"><a href="#refer" class="headerlink" title="refer"></a>refer</h3><p>以下两篇文章对HTTPS解析的很详细，有图有真相，很好理解:</p>
+<ul>
+<li><a href="https://www.cnblogs.com/snowater/p/7804889.html" target="_blank" rel="noopener">https://www.cnblogs.com/snowater/p/7804889.html</a></li>
+<li><a href="https://www.cnblogs.com/xdyixia/p/11610102.html" target="_blank" rel="noopener">https://www.cnblogs.com/xdyixia/p/11610102.html</a></li>
+</ul>
+<h3 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h3><p>HTTPS是在HTTP跟TCP之间加了一层对数据进行加解密的SSL/TLS</p>
+<ul>
+<li>SSL: Secure Sockets Layer</li>
+<li>TLS: Transport Layer Security</li>
+</ul>
+<p><br>HTTPS认证过程, 主要有三部分</p>
+<ul>
+<li>Server证书的认证阶段, 即得到CA机构的签名</li>
+<li>Server跟Client之间通过非对称的方式验证彼此身份</li>
+<li>Server跟Client之间通过双方认同的随机数做对称加密数据传输</li>
+</ul>
+<p><br><img src="https-1.svg" alt="证书的认证，以及HTTPS的工作流程.svg"></p>
+]]></content>
+      <categories>
+        <category>https</category>
+      </categories>
+      <tags>
+        <tag>https</tag>
       </tags>
   </entry>
   <entry>
@@ -650,8 +650,7 @@
 <br>我们都知道，maven可以帮助我们管理依赖，否则我们就需要采用古老的方式，单独从其他地方找到对应的jar，然后放到classpath中，这样很麻烦也很容易出现兼容问题.<br>
 
 <p><a name="AkmXp"></a></p>
-<h3 id="maven的一些知识整理"><a href="#maven的一些知识整理" class="headerlink" title="maven的一些知识整理"></a>maven的一些知识整理</h3><p><a name="zuSd4"></a></p>
-<h4 id><a href="#" class="headerlink" title></a><br></h4><p><a name="l0Npl"></a></p>
+<h3 id="maven的一些知识整理"><a href="#maven的一些知识整理" class="headerlink" title="maven的一些知识整理"></a>maven的一些知识整理</h3><p><a name="l0Npl"></a></p>
 <h4 id="1-maven的仲裁机制"><a href="#1-maven的仲裁机制" class="headerlink" title="1. maven的仲裁机制"></a>1. maven的仲裁机制</h4><p>所谓仲裁，就是出现冲突时会怎么抉择。maven会将项目的依赖信息，做成一棵树的形状，如果有两个一样的jar，但他们的版本不一样</p>
 <ul>
 <li>离树根越近的那个会被选中;</li>
@@ -667,20 +666,18 @@
 
 <p>其实还有一种方式，就是optional方式，optional的意思相当于”exclude by default”, 即默认被排除掉. 比如我们在开发项目的时候，会觉得我们依赖的某个jar并不是 依赖我们所必须的，这时候就可以将其标记位optional。假设</p>
 <ul>
-<li><p>A项目依赖了<code>org.yaml:snakeyaml:1.20</code>但又不希望将它传递给依赖自己的B，那么可以在pom中作以下的dependency声明</p>
-</li>
-<li><p>那么B引用A的时候， <code>org.yaml:snakeyaml:1.20</code> 是不会加到B中来的。如果需要加进来，B自己可以显式地在自己的pom中进行定义</p>
-<figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.yaml<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>snakeyaml<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>1.20<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">optional</span>&gt;</span>true<span class="tag">&lt;/<span class="name">optional</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<li>A项目依赖了<code>org.yaml:snakeyaml:1.20</code>但又不希望将它传递给依赖自己的B，那么可以在pom中作以下的dependency声明</li>
+<li>那么B引用A的时候， <code>org.yaml:snakeyaml:1.20</code> 是不会加到B中来的。如果需要加进来，B自己可以显式地在自己的pom中进行定义<figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.yaml<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>snakeyaml<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>1.20<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">optional</span>&gt;</span>true<span class="tag">&lt;/<span class="name">optional</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
 <br>
 <a name="HYXQc"></a>
-#### 3. 一个dependency的表示
-<figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">project</span>&gt;</span></span><br><span class="line">  ...</span><br><span class="line">  <span class="tag">&lt;<span class="name">dependencies</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>group-c<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>artifact-b<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">      <span class="comment">&lt;!-- This is not a jar dependency, so we must specify type. --&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">type</span>&gt;</span>war<span class="tag">&lt;/<span class="name">type</span>&gt;</span></span><br><span class="line">		  <span class="tag">&lt;<span class="name">classifier</span>&gt;</span>stage<span class="tag">&lt;/<span class="name">classifier</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">version</span>&gt;</span>1.0<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"> </span><br><span class="line">    <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>group-a<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>artifact-b<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">      <span class="comment">&lt;!-- This is not a jar dependency, so we must specify type. --&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">type</span>&gt;</span>bar<span class="tag">&lt;/<span class="name">type</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">version</span>&gt;</span>1.1<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">dependencies</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">project</span>&gt;</span></span><br></pre></td></tr></table></figure>
-一般的我们引入一个dependency的时候，我们只要定义其GAV(groupId, artifactId, version)即可。其实一个dependency完整的表示应该包含: GAV+type+classifier
+
 </li>
-<li><p>type: 表示当前是什么类型. 因为默认type=jar，所以很多时候我们不定义. 但是如果对应的dependency不是jar则需要显式声明</p>
-</li>
-<li><p>classifier: 表示当前是那种用途的，该值默认为null。比如同一个依赖(即GAV+type一样)，但是需要适应于不同的业务场景，比如一个是给客户A用的，一个是给客户B用的，那么就可以使用classifier来区分了。比如json-lib可能需要同时提供给jdk13和jdk15</p>
-</li>
+</ul>
+<h4 id="3-一个dependency的表示"><a href="#3-一个dependency的表示" class="headerlink" title="3. 一个dependency的表示"></a>3. 一个dependency的表示</h4><figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">project</span>&gt;</span></span><br><span class="line">  ...</span><br><span class="line">  <span class="tag">&lt;<span class="name">dependencies</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>group-c<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>artifact-b<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">      <span class="comment">&lt;!-- This is not a jar dependency, so we must specify type. --&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">type</span>&gt;</span>war<span class="tag">&lt;/<span class="name">type</span>&gt;</span></span><br><span class="line">		  <span class="tag">&lt;<span class="name">classifier</span>&gt;</span>stage<span class="tag">&lt;/<span class="name">classifier</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">version</span>&gt;</span>1.0<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"> </span><br><span class="line">    <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>group-a<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>artifact-b<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">      <span class="comment">&lt;!-- This is not a jar dependency, so we must specify type. --&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">type</span>&gt;</span>bar<span class="tag">&lt;/<span class="name">type</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">version</span>&gt;</span>1.1<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">dependencies</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">project</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>一般的我们引入一个dependency的时候，我们只要定义其GAV(groupId, artifactId, version)即可。其实一个dependency完整的表示应该包含: GAV+type+classifier</p>
+<ul>
+<li>type: 表示当前是什么类型. 因为默认type=jar，所以很多时候我们不定义. 但是如果对应的dependency不是jar则需要显式声明</li>
+<li>classifier: 表示当前是那种用途的，该值默认为null。比如同一个依赖(即GAV+type一样)，但是需要适应于不同的业务场景，比如一个是给客户A用的，一个是给客户B用的，那么就可以使用classifier来区分了。比如json-lib可能需要同时提供给jdk13和jdk15</li>
 </ul>
 <p><img src="/2020/06/13/maven%E7%9F%A5%E8%AF%86%E6%95%B4%E7%90%86+%E6%8F%92%E4%BB%B6%E7%BC%96%E5%86%99/m-1.png" alt="image.png"><br></p>
 <figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>net.sf.json-lib<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>json-lib<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;<span class="name">version</span>&gt;</span>2.2.2<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;<span class="name">classifier</span>&gt;</span>jdk15<span class="tag">&lt;/<span class="name">classifier</span>&gt;</span> </span><br><span class="line">  <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
@@ -729,10 +726,8 @@
 </tbody></table>
 <br>
 <a name="tvvmD"></a>
-### 插件相关
 
-
-<p><a name="ZjN36"></a></p>
+<h3 id="插件相关"><a href="#插件相关" class="headerlink" title="插件相关"></a>插件相关</h3><p><a name="ZjN36"></a></p>
 <h4 id="1-生命周期简单介绍"><a href="#1-生命周期简单介绍" class="headerlink" title="1. 生命周期简单介绍"></a>1. 生命周期简单介绍</h4><p><br>maven是基于build lifecycle的概念设计出来的，有三个生命周期:</p>
 <ul>
 <li>clean, 清理上次build的数据</li>
