@@ -79,12 +79,12 @@
 
 
 
-<meta name="description" content="我们都知道，maven可以帮助我们管理依赖，否则我们就需要采用古老的方式，单独从其他地方找到对应的jar，然后放到classpath中，这样很麻烦也很容易出现兼容问题">
+<meta name="description" content="我们都知道，maven可以帮助我们管理依赖，否则我们就需要采用古老的方式，单独从其他地方找到对应的jar，然后放到classpath中，这样很麻烦也很容易出现兼容问题. 这里稍微做一些整理   maven的一些知识整理  1. maven的仲裁机制所谓仲裁，就是出现冲突时会怎么抉择。maven会将项目的依赖信息，做成一棵树的形状，如果有两个一样的jar，但他们的版本不一样  离树根越近的那个会被">
 <meta property="og:type" content="article">
 <meta property="og:title" content="maven知识整理+插件编写">
 <meta property="og:url" content="https://gukie.github.io/2020/06/13/maven%E7%9F%A5%E8%AF%86%E6%95%B4%E7%90%86+%E6%8F%92%E4%BB%B6%E7%BC%96%E5%86%99/index.html">
 <meta property="og:site_name" content="远山一棵树">
-<meta property="og:description" content="我们都知道，maven可以帮助我们管理依赖，否则我们就需要采用古老的方式，单独从其他地方找到对应的jar，然后放到classpath中，这样很麻烦也很容易出现兼容问题">
+<meta property="og:description" content="我们都知道，maven可以帮助我们管理依赖，否则我们就需要采用古老的方式，单独从其他地方找到对应的jar，然后放到classpath中，这样很麻烦也很容易出现兼容问题. 这里稍微做一些整理   maven的一些知识整理  1. maven的仲裁机制所谓仲裁，就是出现冲突时会怎么抉择。maven会将项目的依赖信息，做成一棵树的形状，如果有两个一样的jar，但他们的版本不一样  离树根越近的那个会被">
 <meta property="og:image" content="https://gukie.github.io/2020/06/13/maven%E7%9F%A5%E8%AF%86%E6%95%B4%E7%90%86+%E6%8F%92%E4%BB%B6%E7%BC%96%E5%86%99/m-1.png">
 <meta property="og:image" content="https://gukie.github.io/2020/06/13/maven%E7%9F%A5%E8%AF%86%E6%95%B4%E7%90%86+%E6%8F%92%E4%BB%B6%E7%BC%96%E5%86%99/lifecycle-structure.jpg">
 <meta property="article:published_time" content="2020-06-13T06:12:07.607Z">
@@ -397,18 +397,8 @@
       
 
       
-        <p>我们都知道，maven可以帮助我们管理依赖，否则我们就需要采用古老的方式，单独从其他地方找到对应的jar，然后放到classpath中，这样很麻烦也很容易出现兼容问题</p>
-<a id="more"></a>
-
-<p><a name="9xWL1"></a></p>
-<h3 id="refer"><a href="#refer" class="headerlink" title="refer"></a>refer</h3><ul>
-<li><a href="https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html" target="_blank" rel="noopener">https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html</a> (仲裁机制+scope等知识)</li>
-<li><a href="https://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html" target="_blank" rel="noopener">https://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html</a> (lifeCycle+phase+goal)</li>
-<li><a href="https://maven.apache.org/guides/plugin/guide-java-plugin-development.html" target="_blank" rel="noopener">https://maven.apache.org/guides/plugin/guide-java-plugin-development.html</a> （插件编写）</li>
-<li><a href="https://maven.apache.org/guides/mini/guide-configuring-plugins.html#Using_the_executions_Tag" target="_blank" rel="noopener">https://maven.apache.org/guides/mini/guide-configuring-plugins.html#Using_the_executions_Tag</a> (插件参数的配置)</li>
-</ul>
-<br>
-<br>我们都知道，maven可以帮助我们管理依赖，否则我们就需要采用古老的方式，单独从其他地方找到对应的jar，然后放到classpath中，这样很麻烦也很容易出现兼容问题<br>
+        <br>
+<br>我们都知道，maven可以帮助我们管理依赖，否则我们就需要采用古老的方式，单独从其他地方找到对应的jar，然后放到classpath中，这样很麻烦也很容易出现兼容问题. 这里稍微做一些整理<br>
 
 <p><a name="AkmXp"></a></p>
 <h3 id="maven的一些知识整理"><a href="#maven的一些知识整理" class="headerlink" title="maven的一些知识整理"></a>maven的一些知识整理</h3><p><a name="zuSd4"></a></p>
@@ -563,15 +553,14 @@
 </ol>
 <br>
 <br>
-<br>插件编写，以及源码
-
-<ul>
-<li>如何缩短单独运行的命令行<br>如何运行的</li>
-<li><br>
 
 
-
-</li>
+<p><a name="9xWL1"></a></p>
+<h3 id="refer"><a href="#refer" class="headerlink" title="refer"></a>refer</h3><ul>
+<li><a href="https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html" target="_blank" rel="noopener">https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html</a> (仲裁机制+scope等知识)</li>
+<li><a href="https://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html" target="_blank" rel="noopener">https://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html</a> (lifeCycle+phase+goal)</li>
+<li><a href="https://maven.apache.org/guides/plugin/guide-java-plugin-development.html" target="_blank" rel="noopener">https://maven.apache.org/guides/plugin/guide-java-plugin-development.html</a> （插件编写）</li>
+<li><a href="https://maven.apache.org/guides/mini/guide-configuring-plugins.html#Using_the_executions_Tag" target="_blank" rel="noopener">https://maven.apache.org/guides/mini/guide-configuring-plugins.html#Using_the_executions_Tag</a> (插件参数的配置)</li>
 </ul>
 
       
@@ -747,8 +736,8 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#refer"><span class="nav-number">1.</span> <span class="nav-text">refer</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#maven的一些知识整理"><span class="nav-number">2.</span> <span class="nav-text">maven的一些知识整理</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#"><span class="nav-number">2.1.</span> <span class="nav-text">
-</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-maven的仲裁机制"><span class="nav-number">2.2.</span> <span class="nav-text">1. maven的仲裁机制</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-exclude-optional的区别"><span class="nav-number">2.3.</span> <span class="nav-text">2.  exclude+optional的区别</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-dependency的scope及其传递性"><span class="nav-number">2.4.</span> <span class="nav-text">4. dependency的scope及其传递性</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-生命周期简单介绍"><span class="nav-number">2.5.</span> <span class="nav-text">1. 生命周期简单介绍</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-插件编写"><span class="nav-number">2.6.</span> <span class="nav-text">2. 插件编写</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#一个插件的具体的例子"><span class="nav-number">2.6.1.</span> <span class="nav-text">一个插件的具体的例子</span></a></li></ol></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#maven的一些知识整理"><span class="nav-number">1.</span> <span class="nav-text">maven的一些知识整理</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#"><span class="nav-number">1.1.</span> <span class="nav-text">
+</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-maven的仲裁机制"><span class="nav-number">1.2.</span> <span class="nav-text">1. maven的仲裁机制</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-exclude-optional的区别"><span class="nav-number">1.3.</span> <span class="nav-text">2.  exclude+optional的区别</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-dependency的scope及其传递性"><span class="nav-number">1.4.</span> <span class="nav-text">4. dependency的scope及其传递性</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-生命周期简单介绍"><span class="nav-number">1.5.</span> <span class="nav-text">1. 生命周期简单介绍</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-插件编写"><span class="nav-number">1.6.</span> <span class="nav-text">2. 插件编写</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#一个插件的具体的例子"><span class="nav-number">1.6.1.</span> <span class="nav-text">一个插件的具体的例子</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#refer"><span class="nav-number">2.</span> <span class="nav-text">refer</span></a></li></ol></div>
             
 
           </div>
