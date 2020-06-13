@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="maven," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="我们都知道，maven可以帮助我们管理依赖，否则我们就需要采用古老的方式，单独从其他地方找到对应的jar，然后放到classpath中，这样很麻烦也很容易出现兼容问题">
+<meta property="og:type" content="article">
+<meta property="og:title" content="maven知识整理+插件编写">
+<meta property="og:url" content="https://gukie.github.io/2020/06/13/maven%E7%9F%A5%E8%AF%86%E6%95%B4%E7%90%86+%E6%8F%92%E4%BB%B6%E7%BC%96%E5%86%99/index.html">
+<meta property="og:site_name" content="远山一棵树">
+<meta property="og:description" content="我们都知道，maven可以帮助我们管理依赖，否则我们就需要采用古老的方式，单独从其他地方找到对应的jar，然后放到classpath中，这样很麻烦也很容易出现兼容问题">
+<meta property="og:image" content="https://gukie.github.io/2020/06/13/maven%E7%9F%A5%E8%AF%86%E6%95%B4%E7%90%86+%E6%8F%92%E4%BB%B6%E7%BC%96%E5%86%99/m-1.png">
+<meta property="og:image" content="https://gukie.github.io/2020/06/13/maven%E7%9F%A5%E8%AF%86%E6%95%B4%E7%90%86+%E6%8F%92%E4%BB%B6%E7%BC%96%E5%86%99/lifecycle-structure.jpg">
+<meta property="article:published_time" content="2020-06-13T06:12:07.607Z">
+<meta property="article:modified_time" content="2020-06-13T06:12:07.607Z">
+<meta property="article:author" content="古树">
+<meta property="article:tag" content="maven">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gukie.github.io/2020/06/13/maven%E7%9F%A5%E8%AF%86%E6%95%B4%E7%90%86+%E6%8F%92%E4%BB%B6%E7%BC%96%E5%86%99/m-1.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '古树'
+    },
+    algolia: {
+      applicationID: '2JRVVP3GAX',
+      apiKey: 'fa76343785d784b964874717e40f84ad',
+      indexName: 'hexo_search',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://gukie.github.io/2020/06/13/maven知识整理+插件编写/"/>
+
+
+
+
+
+  <title>maven知识整理+插件编写 | 远山一棵树</title>
+  
+
+
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?3bf25daaa05c6fb008bb0f5476d379ed";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">远山一棵树</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">keep busy living or keep busy dying</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  
+  <div class="algolia-popup popup search-popup">
+    <div class="algolia-search">
+      <div class="algolia-search-input-icon">
+        <i class="fa fa-search"></i>
+      </div>
+      <div class="algolia-search-input" id="algolia-search-input"></div>
+    </div>
+
+    <div class="algolia-results">
+      <div id="algolia-stats"></div>
+      <div id="algolia-hits"></div>
+      <div id="algolia-pagination" class="algolia-pagination"></div>
+    </div>
+
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+  </div>
+
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://gukie.github.io/2020/06/13/maven%E7%9F%A5%E8%AF%86%E6%95%B4%E7%90%86+%E6%8F%92%E4%BB%B6%E7%BC%96%E5%86%99/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="古树">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/shawsshank-2.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="远山一棵树">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">maven知识整理+插件编写</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-06-13T14:12:07+08:00">
+                2020-06-13
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/maven/" itemprop="url" rel="index">
+                    <span itemprop="name">maven</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv">阅读数
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>次
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>我们都知道，maven可以帮助我们管理依赖，否则我们就需要采用古老的方式，单独从其他地方找到对应的jar，然后放到classpath中，这样很麻烦也很容易出现兼容问题</p>
+<a id="more"></a>
+
+<p><a name="9xWL1"></a></p>
+<h3 id="refer"><a href="#refer" class="headerlink" title="refer"></a>refer</h3><ul>
+<li><a href="https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html" target="_blank" rel="noopener">https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html</a> (仲裁机制+scope等知识)</li>
+<li><a href="https://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html" target="_blank" rel="noopener">https://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html</a> (lifeCycle+phase+goal)</li>
+<li><a href="https://maven.apache.org/guides/plugin/guide-java-plugin-development.html" target="_blank" rel="noopener">https://maven.apache.org/guides/plugin/guide-java-plugin-development.html</a> （插件编写）</li>
+<li><a href="https://maven.apache.org/guides/mini/guide-configuring-plugins.html#Using_the_executions_Tag" target="_blank" rel="noopener">https://maven.apache.org/guides/mini/guide-configuring-plugins.html#Using_the_executions_Tag</a> (插件参数的配置)</li>
+</ul>
+<br>
+<br>我们都知道，maven可以帮助我们管理依赖，否则我们就需要采用古老的方式，单独从其他地方找到对应的jar，然后放到classpath中，这样很麻烦也很容易出现兼容问题<br>
+
+<p><a name="AkmXp"></a></p>
+<h3 id="maven的一些知识整理"><a href="#maven的一些知识整理" class="headerlink" title="maven的一些知识整理"></a>maven的一些知识整理</h3><p><a name="zuSd4"></a></p>
+<h4 id><a href="#" class="headerlink" title></a><br></h4><p><a name="l0Npl"></a></p>
+<h4 id="1-maven的仲裁机制"><a href="#1-maven的仲裁机制" class="headerlink" title="1. maven的仲裁机制"></a>1. maven的仲裁机制</h4><p>所谓仲裁，就是出现冲突时会怎么抉择。maven会将项目的依赖信息，做成一棵树的形状，如果有两个一样的jar，但他们的版本不一样</p>
+<ul>
+<li>离树根越近的那个会被选中;</li>
+<li>如果他们两个离树根的距离相等，那么就看谁是第一个被发现(依靠他们在pom中的顺序)</li>
+</ul>
+<p>比如A项目中有两个D的jar(他们分别是被不同的jar带进来的)，但是版本不一样, 路径如下:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">A-&gt;B-&gt;D1.0</span><br><span class="line">A-&gt;C-&gt;E-&gt;D2.0</span><br></pre></td></tr></table></figure>
+<p>那么D1.0会被选中</p>
+<p><a name="zs5en"></a></p>
+<h4 id="2-exclude-optional的区别"><a href="#2-exclude-optional的区别" class="headerlink" title="2.  exclude+optional的区别"></a>2.  exclude+optional的区别</h4><p>在依赖某个dependency的时候，我们可能不想要某个dependency，那么我们可以显式的通过exclude将其剔除掉，比如:</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"> <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">     <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>com.101tec<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">     <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>zkclient<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">     <span class="tag">&lt;<span class="name">version</span>&gt;</span>0.8<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">     <span class="tag">&lt;<span class="name">exclusions</span>&gt;</span></span><br><span class="line">       <span class="tag">&lt;<span class="name">exclusion</span>&gt;</span></span><br><span class="line">         <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>slf4j-log4j12<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">         <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.slf4j<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">       <span class="tag">&lt;/<span class="name">exclusion</span>&gt;</span></span><br><span class="line">     <span class="tag">&lt;/<span class="name">exclusions</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+
+<p>其实还有一种方式，就是optional方式，optional的意思相当于”exclude by default”, 即默认被排除掉. 比如我们在开发项目的时候，会觉得我们依赖的某个jar并不是 依赖我们所必须的，这时候就可以将其标记位optional。假设</p>
+<ul>
+<li><p>A项目依赖了<code>org.yaml:snakeyaml:1.20</code>但又不希望将它传递给依赖自己的B，那么可以在pom中作以下的dependency声明</p>
+</li>
+<li><p>那么B引用A的时候， <code>org.yaml:snakeyaml:1.20</code> 是不会加到B中来的。如果需要加进来，B自己可以显式地在自己的pom中进行定义</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.yaml<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>snakeyaml<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>1.20<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">optional</span>&gt;</span>true<span class="tag">&lt;/<span class="name">optional</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<br>
+<a name="HYXQc"></a>
+#### 3. 一个dependency的表示
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">project</span>&gt;</span></span><br><span class="line">  ...</span><br><span class="line">  <span class="tag">&lt;<span class="name">dependencies</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>group-c<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>artifact-b<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">      <span class="comment">&lt;!-- This is not a jar dependency, so we must specify type. --&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">type</span>&gt;</span>war<span class="tag">&lt;/<span class="name">type</span>&gt;</span></span><br><span class="line">		  <span class="tag">&lt;<span class="name">classifier</span>&gt;</span>stage<span class="tag">&lt;/<span class="name">classifier</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">version</span>&gt;</span>1.0<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"> </span><br><span class="line">    <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>group-a<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>artifact-b<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">      <span class="comment">&lt;!-- This is not a jar dependency, so we must specify type. --&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">type</span>&gt;</span>bar<span class="tag">&lt;/<span class="name">type</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">version</span>&gt;</span>1.1<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">dependencies</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">project</span>&gt;</span></span><br></pre></td></tr></table></figure>
+一般的我们引入一个dependency的时候，我们只要定义其GAV(groupId, artifactId, version)即可。其实一个dependency完整的表示应该包含: GAV+type+classifier
+</li>
+<li><p>type: 表示当前是什么类型. 因为默认type=jar，所以很多时候我们不定义. 但是如果对应的dependency不是jar则需要显式声明</p>
+</li>
+<li><p>classifier: 表示当前是那种用途的，该值默认为null。比如同一个依赖(即GAV+type一样)，但是需要适应于不同的业务场景，比如一个是给客户A用的，一个是给客户B用的，那么就可以使用classifier来区分了。比如json-lib可能需要同时提供给jdk13和jdk15</p>
+</li>
+</ul>
+<p><img src="/2020/06/13/maven%E7%9F%A5%E8%AF%86%E6%95%B4%E7%90%86+%E6%8F%92%E4%BB%B6%E7%BC%96%E5%86%99/m-1.png" alt="image.png"><br></p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>net.sf.json-lib<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>json-lib<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;<span class="name">version</span>&gt;</span>2.2.2<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;<span class="name">classifier</span>&gt;</span>jdk15<span class="tag">&lt;/<span class="name">classifier</span>&gt;</span> </span><br><span class="line">  <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+
+<p><a name="zuglD"></a></p>
+<h4 id="4-dependency的scope及其传递性"><a href="#4-dependency的scope及其传递性" class="headerlink" title="4. dependency的scope及其传递性"></a>4. dependency的scope及其传递性</h4><p>dependency的scope表示其作用范围，同时也确定了其传递性，有6个scope<br></p>
+<table>
+<thead>
+<tr>
+<th>scope</th>
+<th>特性</th>
+<th>是否会传递给依赖项</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>compile</td>
+<td>默认的scope</td>
+<td>是</td>
+</tr>
+<tr>
+<td>provided</td>
+<td>跟compile类似. 不同之处在于:它期望在运行时JDK或者Container会提供该dependency. <br></td>
+<td>否</td>
+</tr>
+<tr>
+<td>runtime</td>
+<td>在compile阶段不是必须的，是给运行时准备的</td>
+<td>否</td>
+</tr>
+<tr>
+<td>test</td>
+<td>测试时使用的</td>
+<td>否</td>
+</tr>
+<tr>
+<td>system</td>
+<td>跟provided类似，但是它不会区从仓库中查找对应的dependency，而是通过指定的路径区找</td>
+<td>否</td>
+</tr>
+<tr>
+<td>import</td>
+<td>将另一个pom引入进来</td>
+<td>是</td>
+</tr>
+</tbody></table>
+<br>
+<a name="tvvmD"></a>
+### 插件相关
+
+
+<p><a name="ZjN36"></a></p>
+<h4 id="1-生命周期简单介绍"><a href="#1-生命周期简单介绍" class="headerlink" title="1. 生命周期简单介绍"></a>1. 生命周期简单介绍</h4><p><br>maven是基于build lifecycle的概念设计出来的，有三个生命周期:</p>
+<ul>
+<li>clean, 清理上次build的数据</li>
+<li>default，负责编译打包部署</li>
+<li>site，负责文档的生成</li>
+</ul>
+<p>其中default+clean是我们平时接触比较多的。而每个生命周期都是由多个phase组合而成的，一个phase对应一个plugin，它可能会包含多个goal. 其中goal就是一个具体的执行任务了，大致结构如下<br><img src="/2020/06/13/maven%E7%9F%A5%E8%AF%86%E6%95%B4%E7%90%86+%E6%8F%92%E4%BB%B6%E7%BC%96%E5%86%99/lifecycle-structure.jpg" alt="生命周期.jpg"><br><br><br>其中一个phase由0个或者多个goal组成，如果该phase中没有一个goal，那么它不会执行；但如果它有多个goal，那么没有特别指定执行那个goal的情况下，它下面的所有goal都会执行。有一点需要注意的是，执行一个phase时，在它之前的所有phase都会被先执行。phase可以直接被执行，就像我们平时的 mvn clean install 其实都是直接执行phase的，只是里面的goal会被全部执行而已</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mvn clean myPhase:myGoal package</span><br></pre></td></tr></table></figure>
+<p>考虑以上命令，其中clean和package是一个phase，而myPhase:myGoal是一个goal。那么这条命令会如下执行</p>
+<ul>
+<li>执行clean phase之前的所有phase</li>
+<li>执行clean phase</li>
+<li>执行 myPhase:myGoal</li>
+<li>执行package之前的所有phase</li>
+<li>执行package phase</li>
+</ul>
+<br>
+<br>default build lifecycle 会包含以下phase
+
+<ul>
+<li>validate - 检查项目的正确性，比如是否有东西缺失</li>
+<li>compile - 编译项目的源代码</li>
+<li>test - 对编译好的代码进行测试. 可以通过 <code>-Dmaven.test.skip=true</code> 参数跳过该阶段</li>
+<li>package - 对编译好的代码进行打包，通过该phase可以生成jar，所以平时我们会执行<code>mvn clean package</code> 进行打包动作</li>
+<li>verify - 对测试结果进行验证，以确保达到了预期的标准</li>
+<li>install -将打好的包安装到本地仓库，以方便本地的其他项目可以使用</li>
+<li>deploy - 将打好的包上传到远程仓库，方便其他项目可以下载使用.</li>
+</ul>
+<br>
+
+<p><a name="mIuQO"></a></p>
+<h4 id="2-插件编写"><a href="#2-插件编写" class="headerlink" title="2. 插件编写"></a>2. 插件编写</h4><p>其实插件的编写就是一个写Mojo的过程. 在写好之后，如果要单独执行对应的goal需要执行如下命令</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mvn &#123;groupId&#125;:&#123;artifactId&#125;:&#123;version&#125;:&#123;goalName&#125;</span><br></pre></td></tr></table></figure>
+<p>这个命令太长了，我们可以通过配置做做一些精简</p>
+<ol>
+<li><p>在pom中通过引入maven-plugin-plugin插件增加goalPrefix</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">plugin</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.apache.maven.plugins<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>maven-plugin-plugin<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>3.6.0<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">configuration</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">goalPrefix</span>&gt;</span>duplicate<span class="tag">&lt;/<span class="name">goalPrefix</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">configuration</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">plugin</span>&gt;</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>同时在maven的settings.xm文件中配置如下信息. settings.xml文件的位置:</p>
+<ol>
+<li>自己的: <code>${user.home}/.m2/settings.xml</code></li>
+<li>全局的(大家都可以看到的): <code>${maven.home}/conf/settings.xml</code></li>
+</ol>
+</li>
+</ol>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">pluginGroups</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">pluginGroup</span>&gt;</span>com.demo<span class="tag">&lt;/<span class="name">pluginGroup</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">pluginGroups</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<br>
+
+<p><a name="xjKBE"></a></p>
+<h5 id="一个插件的具体的例子"><a href="#一个插件的具体的例子" class="headerlink" title="一个插件的具体的例子"></a>一个插件的具体的例子</h5><ol>
+<li>pom.xml文件<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">project</span> <span class="attr">xmlns</span>=<span class="string">"http://maven.apache.org/POM/4.0.0"</span></span></span><br><span class="line"><span class="tag">         <span class="attr">xmlns:xsi</span>=<span class="string">"http://www.w3.org/2001/XMLSchema-instance"</span></span></span><br><span class="line"><span class="tag">         <span class="attr">xsi:schemaLocation</span>=<span class="string">"http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">modelVersion</span>&gt;</span>4.0.0<span class="tag">&lt;/<span class="name">modelVersion</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>com.demo<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>duplicate-check<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>1.0-SNAPSHOT<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">packaging</span>&gt;</span>maven-plugin<span class="tag">&lt;/<span class="name">packaging</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">properties</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">java.version</span>&gt;</span>1.8<span class="tag">&lt;/<span class="name">java.version</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">java.encoding</span>&gt;</span>UTF-8<span class="tag">&lt;/<span class="name">java.encoding</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">properties</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">dependencies</span>&gt;</span></span><br><span class="line"></span><br><span class="line">        <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.apache.maven<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>maven-plugin-api<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">version</span>&gt;</span>3.6.0<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.apache.maven.plugin-tools<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>maven-plugin-annotations<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">version</span>&gt;</span>3.6.0<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">scope</span>&gt;</span>provided<span class="tag">&lt;/<span class="name">scope</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.apache.maven<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>maven-project<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">version</span>&gt;</span>2.2.1<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">exclusions</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">exclusion</span>&gt;</span></span><br><span class="line">                    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>backport-util-concurrent<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">                    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>backport-util-concurrent<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;/<span class="name">exclusion</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;/<span class="name">exclusions</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.apache.maven<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>maven-core<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">version</span>&gt;</span>3.6.0<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.apache.maven.shared<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>maven-dependency-tree<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">version</span>&gt;</span>3.0.1<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;/<span class="name">dependencies</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">build</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">plugins</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">plugin</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.apache.maven.plugins<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>maven-compiler-plugin<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">configuration</span>&gt;</span></span><br><span class="line">                    <span class="tag">&lt;<span class="name">source</span>&gt;</span>$&#123;java.version&#125;<span class="tag">&lt;/<span class="name">source</span>&gt;</span></span><br><span class="line">                    <span class="tag">&lt;<span class="name">target</span>&gt;</span>$&#123;java.version&#125;<span class="tag">&lt;/<span class="name">target</span>&gt;</span></span><br><span class="line">                    <span class="tag">&lt;<span class="name">encoding</span>&gt;</span>$&#123;java.encoding&#125;<span class="tag">&lt;/<span class="name">encoding</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;/<span class="name">configuration</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;/<span class="name">plugin</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">plugin</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.apache.maven.plugins<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>maven-plugin-plugin<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">version</span>&gt;</span>3.6.0<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">configuration</span>&gt;</span></span><br><span class="line">                    <span class="tag">&lt;<span class="name">goalPrefix</span>&gt;</span>duplicate<span class="tag">&lt;/<span class="name">goalPrefix</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;/<span class="name">configuration</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;/<span class="name">plugin</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">plugin</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.apache.maven.plugins<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>maven-dependency-plugin<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">version</span>&gt;</span>3.1.1<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">executions</span>&gt;</span></span><br><span class="line">                    <span class="tag">&lt;<span class="name">execution</span>&gt;</span></span><br><span class="line">                        <span class="tag">&lt;<span class="name">phase</span>&gt;</span>initialize<span class="tag">&lt;/<span class="name">phase</span>&gt;</span></span><br><span class="line">                        <span class="tag">&lt;<span class="name">goals</span>&gt;</span></span><br><span class="line">                            <span class="tag">&lt;<span class="name">goal</span>&gt;</span>properties<span class="tag">&lt;/<span class="name">goal</span>&gt;</span></span><br><span class="line">                        <span class="tag">&lt;/<span class="name">goals</span>&gt;</span></span><br><span class="line">                    <span class="tag">&lt;/<span class="name">execution</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;/<span class="name">executions</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;/<span class="name">plugin</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">plugins</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">build</span>&gt;</span></span><br><span class="line">   </span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;/<span class="name">project</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+
+</li>
+</ol>
+<ol start="2">
+<li>DuplicateClassCheckMojo.java 文件<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.demo;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> com.google.common.collect.Maps;</span><br><span class="line"><span class="keyword">import</span> com.google.common.collect.Sets;</span><br><span class="line"><span class="keyword">import</span> org.apache.commons.lang3.StringUtils;</span><br><span class="line"><span class="keyword">import</span> org.apache.maven.artifact.Artifact;</span><br><span class="line"><span class="keyword">import</span> org.apache.maven.execution.MavenSession;</span><br><span class="line"><span class="keyword">import</span> org.apache.maven.plugin.AbstractMojo;</span><br><span class="line"><span class="keyword">import</span> org.apache.maven.plugin.MojoExecutionException;</span><br><span class="line"><span class="keyword">import</span> org.apache.maven.plugin.MojoFailureException;</span><br><span class="line"><span class="keyword">import</span> org.apache.maven.plugins.annotations.Component;</span><br><span class="line"><span class="keyword">import</span> org.apache.maven.plugins.annotations.LifecyclePhase;</span><br><span class="line"><span class="keyword">import</span> org.apache.maven.plugins.annotations.Mojo;</span><br><span class="line"><span class="keyword">import</span> org.apache.maven.plugins.annotations.Parameter;</span><br><span class="line"><span class="keyword">import</span> org.apache.maven.plugins.annotations.ResolutionScope;</span><br><span class="line"><span class="keyword">import</span> org.apache.maven.project.DefaultProjectBuildingRequest;</span><br><span class="line"><span class="keyword">import</span> org.apache.maven.project.MavenProject;</span><br><span class="line"><span class="keyword">import</span> org.apache.maven.project.ProjectBuildingRequest;</span><br><span class="line"><span class="keyword">import</span> org.apache.maven.shared.dependency.graph.DependencyGraphBuilder;</span><br><span class="line"><span class="keyword">import</span> org.apache.maven.shared.dependency.graph.DependencyGraphBuilderException;</span><br><span class="line"><span class="keyword">import</span> org.apache.maven.shared.dependency.graph.DependencyNode;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.File;</span><br><span class="line"><span class="keyword">import</span> java.util.Collection;</span><br><span class="line"><span class="keyword">import</span> java.util.Collections;</span><br><span class="line"><span class="keyword">import</span> java.util.HashSet;</span><br><span class="line"><span class="keyword">import</span> java.util.List;</span><br><span class="line"><span class="keyword">import</span> java.util.Map;</span><br><span class="line"><span class="keyword">import</span> java.util.Set;</span><br><span class="line"><span class="keyword">import</span> java.util.function.Consumer;</span><br><span class="line"></span><br><span class="line"><span class="comment">// requiresDependencyResolution的含义: 依赖包之间的关系是否需要已经存在? 如果有的依赖包不存在或者下载不下来 需不需要报错？ 这个默认是runtime, 即只会检验scope=compile+runtime的依赖</span></span><br><span class="line"><span class="meta">@Mojo</span>(name = <span class="string">"class-check"</span>, defaultPhase = LifecyclePhase.VALIDATE, requiresDependencyResolution = ResolutionScope.TEST, requiresDependencyCollection = ResolutionScope.TEST)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DuplicateClassCheckMojo</span> <span class="keyword">extends</span> <span class="title">AbstractMojo</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Parameter</span>(defaultValue = <span class="string">"$&#123;project&#125;"</span>, readonly = <span class="keyword">true</span>, required = <span class="keyword">true</span>)</span><br><span class="line">    <span class="keyword">private</span> MavenProject project;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Parameter</span>(defaultValue = <span class="string">"$&#123;session&#125;"</span>, readonly = <span class="keyword">true</span>, required = <span class="keyword">true</span>)</span><br><span class="line">    <span class="keyword">private</span> MavenSession session;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Component</span>(hint = <span class="string">"default"</span>)</span><br><span class="line">    <span class="keyword">private</span> DependencyGraphBuilder dependencyGraphBuilder;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 当有duplicate的时候，是否需要失败</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Parameter</span>(defaultValue = <span class="string">"true"</span>)</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">boolean</span> failOnDuplicate;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 不需要检查的groupIds</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Parameter</span></span><br><span class="line">    <span class="keyword">private</span> String[] excludeGroupIds;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 不需要检查的 artifactIds</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Parameter</span></span><br><span class="line">    <span class="keyword">private</span> String[] excludeArtifactIds;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 不需要检查的 类名字(是类的全名, 比如: com.demo.DuplicateClassFoundMojo)的前缀</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Parameter</span></span><br><span class="line">    <span class="keyword">private</span> String[] excludeClassPrefixes;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">execute</span><span class="params">()</span> <span class="keyword">throws</span> MojoExecutionException, MojoFailureException </span>&#123;</span><br><span class="line"></span><br><span class="line">        DependencyNode dependencyNode = getDependencyNode();</span><br><span class="line">        <span class="keyword">if</span> (dependencyNode == <span class="keyword">null</span>) &#123;</span><br><span class="line">            getLog().info(DuplicateClassConstants.LOG_TAG + <span class="string">"dependencyNode is null"</span>);</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        Set&lt;Artifact&gt; totalArtifactIds = getArtifacts(dependencyNode);</span><br><span class="line">        resolveDependencies(totalArtifactIds);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> DependencyNode <span class="title">getDependencyNode</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        ProjectBuildingRequest buildingRequest = <span class="keyword">new</span> DefaultProjectBuildingRequest(session.getProjectBuildingRequest());</span><br><span class="line">        buildingRequest.setProject(project);</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> dependencyGraphBuilder.buildDependencyGraph(buildingRequest, <span class="keyword">null</span>);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (DependencyGraphBuilderException e) &#123;</span><br><span class="line">            getLog().info(DuplicateClassConstants.LOG_TAG + <span class="string">"get dependency tree info failed: "</span> + e.getMessage());</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> Set&lt;Artifact&gt; <span class="title">getArtifacts</span><span class="params">(DependencyNode dependencyNode)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">final</span> Artifact artifact = dependencyNode.getArtifact();</span><br><span class="line">        <span class="keyword">if</span> (!isAllowedArtifact(artifact)) &#123;</span><br><span class="line">            <span class="keyword">return</span> Collections.emptySet();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">final</span> List&lt;DependencyNode&gt; children = dependencyNode.getChildren();</span><br><span class="line">        Set&lt;Artifact&gt; totalArtifacts = Sets.newHashSetWithExpectedSize(children != <span class="keyword">null</span> ? children.size() + <span class="number">1</span> : <span class="number">1</span>);</span><br><span class="line">        totalArtifacts.add(artifact);</span><br><span class="line">        <span class="keyword">if</span> (children != <span class="keyword">null</span> &amp;&amp; !children.isEmpty()) &#123;</span><br><span class="line">            <span class="keyword">for</span> (DependencyNode child : children) &#123;</span><br><span class="line">                Artifact childArtifact = child.getArtifact();</span><br><span class="line">                <span class="keyword">if</span> (!isAllowedArtifact(childArtifact)) &#123;</span><br><span class="line">                    <span class="keyword">continue</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                totalArtifacts.add(childArtifact);</span><br><span class="line">                List&lt;DependencyNode&gt; myChildren = child.getChildren();</span><br><span class="line">                <span class="keyword">if</span> (isCollectionEmpty(myChildren)) &#123;</span><br><span class="line">                    <span class="keyword">continue</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">for</span> (DependencyNode myChild : myChildren) &#123;</span><br><span class="line">                    Set&lt;Artifact&gt; artifactFromChild = getArtifacts(myChild);</span><br><span class="line">                    <span class="keyword">if</span> (!isCollectionEmpty(artifactFromChild)) &#123;</span><br><span class="line">                        totalArtifacts.addAll(artifactFromChild);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> totalArtifacts;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">boolean</span> <span class="title">isAllowedArtifact</span><span class="params">(Artifact artifact)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> artifact != <span class="keyword">null</span> &amp;&amp; !Artifact.SCOPE_TEST.equals(artifact.getScope());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">boolean</span> <span class="title">isCollectionEmpty</span><span class="params">(Collection myChildren)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> myChildren == <span class="keyword">null</span> || myChildren.isEmpty();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">resolveDependencies</span><span class="params">(Set&lt;Artifact&gt; totalArtifactIds)</span> <span class="keyword">throws</span> MojoFailureException, MojoExecutionException </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (totalArtifactIds == <span class="keyword">null</span> || totalArtifactIds.isEmpty()) &#123;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        Set&lt;String&gt; skipCheckGroupIds = excludeGroupIds == <span class="keyword">null</span> ? Collections.emptySet() : Sets.newHashSet(excludeGroupIds);</span><br><span class="line">        Set&lt;String&gt; skipArtifactIds = excludeArtifactIds == <span class="keyword">null</span> ? Collections.emptySet() : Sets.newHashSet(excludeArtifactIds);</span><br><span class="line">        Set&lt;String&gt; skipClassPrefixes = excludeClassPrefixes == <span class="keyword">null</span> ? Collections.emptySet() : Sets.newHashSet(excludeClassPrefixes);</span><br><span class="line"></span><br><span class="line">        Map&lt;String, String&gt; classArtifactIdMap = Maps.newHashMapWithExpectedSize(<span class="number">1024</span>);</span><br><span class="line">        Map&lt;String, Set&lt;String&gt;&gt; classArtifactIdListMap = Maps.newHashMapWithExpectedSize(<span class="number">1024</span>);</span><br><span class="line">        Map&lt;String, Set&lt;String&gt;&gt; classDistinctArtifactIdCountMap = Maps.newHashMapWithExpectedSize(<span class="number">1024</span>);</span><br><span class="line">        totalArtifactIds.forEach(item -&gt; &#123;</span><br><span class="line">            File file = item.getFile();</span><br><span class="line">            <span class="keyword">if</span> (file == <span class="keyword">null</span>) &#123;</span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">final</span> String groupId = item.getGroupId();</span><br><span class="line">            <span class="keyword">final</span> String artifactId = item.getArtifactId();</span><br><span class="line">            <span class="keyword">if</span> (skipArtifactIds.contains(artifactId) || skipCheckGroupIds.contains(groupId)) &#123;</span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            String gaItem = groupId + DuplicateClassConstants.COMMA_STR + artifactId;</span><br><span class="line">            String gavItem = gaItem + DuplicateClassConstants.COMMA_STR + item.getVersion();</span><br><span class="line">            List&lt;String&gt; classes = FileRetriever.getClassesFromPath(file);</span><br><span class="line">            <span class="keyword">for</span> (String foundClassItem : classes) &#123;</span><br><span class="line">                <span class="keyword">if</span> (isClassShouldSkip(foundClassItem, skipClassPrefixes)) &#123;</span><br><span class="line">                    <span class="keyword">continue</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">if</span> (classArtifactIdMap.containsKey(foundClassItem)) &#123;</span><br><span class="line">                    <span class="keyword">final</span> String lastGavItem = classArtifactIdMap.get(foundClassItem);</span><br><span class="line">                    <span class="keyword">if</span> (lastGavItem.equals(gavItem)) &#123;</span><br><span class="line">                        <span class="keyword">continue</span>;</span><br><span class="line">                    &#125;</span><br><span class="line"></span><br><span class="line">                    Set&lt;String&gt; existingGavItems = classArtifactIdListMap.getOrDefault(foundClassItem, <span class="keyword">new</span> HashSet&lt;&gt;());</span><br><span class="line">                    <span class="keyword">if</span> (existingGavItems.contains(gavItem)) &#123;</span><br><span class="line">                        <span class="keyword">continue</span>;</span><br><span class="line">                    &#125;</span><br><span class="line">                    existingGavItems.add(lastGavItem);</span><br><span class="line">                    existingGavItems.add(gavItem);</span><br><span class="line">                    classArtifactIdListMap.put(foundClassItem, existingGavItems);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">                    <span class="comment">// 同样的artifact但是version不一样的, 比如都是 fastjson, 可能有1.0 和 2.0</span></span><br><span class="line">                    String lastGaItem = getGaInfo(lastGavItem);</span><br><span class="line">                    Set&lt;String&gt; existingGaSet = classDistinctArtifactIdCountMap.getOrDefault(foundClassItem, <span class="keyword">new</span> HashSet&lt;&gt;());</span><br><span class="line">                    existingGaSet.add(gaItem);</span><br><span class="line">                    existingGaSet.add(lastGaItem);</span><br><span class="line">                    classDistinctArtifactIdCountMap.put(foundClassItem, existingGaSet);</span><br><span class="line">                &#125;</span><br><span class="line">                classArtifactIdMap.put(foundClassItem, gavItem);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">        log(classArtifactIdListMap, classDistinctArtifactIdCountMap);</span><br><span class="line">        <span class="keyword">if</span> (!classArtifactIdListMap.isEmpty() &amp;&amp; failOnDuplicate) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> MojoFailureException(DuplicateClassConstants.LOG_TAG + <span class="string">"there are classes existing in multiple artifact, please check!"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">boolean</span> <span class="title">isClassShouldSkip</span><span class="params">(String foundClassItem, Set&lt;String&gt; skipClassPrefixes)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (isCollectionEmpty(skipClassPrefixes)) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> skipClassPrefixes.stream().filter(StringUtils::isNotBlank).anyMatch(foundClassItem::startsWith);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">log</span><span class="params">(Map&lt;String, Set&lt;String&gt;&gt; classArtifactIdListMap, Map&lt;String, Set&lt;String&gt;&gt; classDistinctArtifactIdCountMap)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (classArtifactIdListMap.isEmpty()) &#123;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        getLog().warn(DuplicateClassConstants.LOG_TAG + <span class="string">"duplicate class size: "</span> + classArtifactIdListMap.keySet().size());</span><br><span class="line">        classArtifactIdListMap.forEach((classItem, artifactIds) -&gt; &#123;</span><br><span class="line">            Set&lt;String&gt; distinctGaItems = classDistinctArtifactIdCountMap.get(classItem);</span><br><span class="line">            <span class="keyword">if</span> (distinctGaItems.size() &gt; <span class="number">1</span>) &#123;</span><br><span class="line">                Consumer&lt;String&gt; printFun = failOnDuplicate ? getLog()::error : getLog()::warn;</span><br><span class="line">                printDuplicateClassInfo(printFun, classItem, artifactIds);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                printDuplicateClassInfo(getLog()::warn, classItem, artifactIds);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> String <span class="title">getGaInfo</span><span class="params">(String lastGavItem)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">int</span> lastIndex = lastGavItem.lastIndexOf(DuplicateClassConstants.COMMA_STR);</span><br><span class="line">        <span class="keyword">return</span> lastGavItem.substring(<span class="number">0</span>, lastIndex);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">printDuplicateClassInfo</span><span class="params">(Consumer&lt;String&gt; consumer, String classItem, Set&lt;String&gt; artifactIds)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">final</span> String title = DuplicateClassConstants.LOG_TAG + <span class="string">"class["</span> + classItem + <span class="string">"] exist in following artifact:"</span>;</span><br><span class="line">        consumer.accept(title);</span><br><span class="line">        <span class="keyword">for</span> (String artifactId : artifactIds) &#123;</span><br><span class="line">            <span class="keyword">final</span> String content = <span class="string">"------------&gt;: "</span> + artifactId;</span><br><span class="line">            consumer.accept(content);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+</li>
+</ol>
+<ol start="3">
+<li>FileRetriever.java文件<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.demo;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.File;</span><br><span class="line"><span class="keyword">import</span> java.io.FilenameFilter;</span><br><span class="line"><span class="keyword">import</span> java.util.ArrayList;</span><br><span class="line"><span class="keyword">import</span> java.util.Collections;</span><br><span class="line"><span class="keyword">import</span> java.util.Enumeration;</span><br><span class="line"><span class="keyword">import</span> java.util.List;</span><br><span class="line"><span class="keyword">import</span> java.util.jar.JarEntry;</span><br><span class="line"><span class="keyword">import</span> java.util.jar.JarFile;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">FileRetriever</span> </span>&#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> List&lt;String&gt; <span class="title">getClassesFromPath</span><span class="params">(File path)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (path.isDirectory()) &#123;</span><br><span class="line">            <span class="keyword">return</span> getClassesFromDirectory(path);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> getClassesFromJarFile(path);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 将 'com/demo/DuplicateClassFoundMojo' 转换成 "com.demo.DuplicateClassFoundMojo"</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> fileName</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span></span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> String <span class="title">fromFileToClassName</span><span class="params">(<span class="keyword">final</span> String fileName)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> fileName.replaceAll(<span class="string">"[/\\\\]"</span>, <span class="string">"\\."</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> List&lt;String&gt; <span class="title">getClassesFromJarFile</span><span class="params">(File path)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (path.canRead()) &#123;</span><br><span class="line">                List&lt;String&gt; classes = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">                JarFile jar = <span class="keyword">new</span> JarFile(path);</span><br><span class="line">                Enumeration&lt;JarEntry&gt; en = jar.entries();</span><br><span class="line">                <span class="keyword">while</span> (en.hasMoreElements()) &#123;</span><br><span class="line">                    JarEntry entry = en.nextElement();</span><br><span class="line">                    <span class="keyword">final</span> String name = entry.getName();</span><br><span class="line">                    <span class="keyword">if</span> (name.endsWith(DuplicateClassConstants.CLASS_FILE_SUFFIX) &amp;&amp; !name.endsWith(DuplicateClassConstants.MODULE_INFO_CLASS_SUFFIX)) &#123;</span><br><span class="line">                        String className = fromFileToClassName(name);</span><br><span class="line">                        classes.add(className);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">return</span> classes;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(DuplicateClassConstants.LOG_TAG + <span class="string">"Failed to read classes from jar file: "</span> + path, e);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> Collections.emptyList();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> List&lt;String&gt; <span class="title">getClassesFromDirectory</span><span class="params">(File path)</span> </span>&#123;</span><br><span class="line">        List&lt;String&gt; classes = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">        <span class="comment">// get jar files from top-level directory</span></span><br><span class="line">        List&lt;File&gt; jarFiles = listFiles(path, (dir, name) -&gt; name.endsWith(DuplicateClassConstants.JAR_FILE_SUFFIX), <span class="keyword">false</span>);</span><br><span class="line">        <span class="keyword">for</span> (File file : jarFiles) &#123;</span><br><span class="line">            classes.addAll(getClassesFromJarFile(file));</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// get all class-files</span></span><br><span class="line">        List&lt;File&gt; classFiles = listFiles(path, (dir, name) -&gt; name.endsWith(DuplicateClassConstants.CLASS_FILE_SUFFIX), <span class="keyword">true</span>);</span><br><span class="line">        <span class="keyword">int</span> substringBeginIndex = path.getAbsolutePath().length() + <span class="number">1</span>;</span><br><span class="line">        <span class="keyword">for</span> (File classfile : classFiles) &#123;</span><br><span class="line">            String className = classfile.getAbsolutePath().substring(substringBeginIndex);</span><br><span class="line">            className = fromFileToClassName(className);</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                classes.add(className);</span><br><span class="line">            &#125; <span class="keyword">catch</span> (Throwable e) &#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> classes;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> List&lt;File&gt; <span class="title">listFiles</span><span class="params">(File directory, FilenameFilter filter, <span class="keyword">boolean</span> recurse)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        File[] entries = directory.listFiles();</span><br><span class="line">        <span class="keyword">if</span> (entries == <span class="keyword">null</span> || entries.length == <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> Collections.emptyList();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        List&lt;File&gt; files = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">        <span class="comment">// Go over entries</span></span><br><span class="line">        <span class="keyword">for</span> (File entry : entries) &#123;</span><br><span class="line">            <span class="comment">// If there is no filter or the filter accepts the</span></span><br><span class="line">            <span class="comment">// file / directory, add it to the list</span></span><br><span class="line">            <span class="keyword">if</span> (filter == <span class="keyword">null</span> || filter.accept(directory, entry.getName())) &#123;</span><br><span class="line">                files.add(entry);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// If the file is a directory and the recurse flag</span></span><br><span class="line">            <span class="comment">// is set, recurse into the directory</span></span><br><span class="line">            <span class="keyword">if</span> (recurse &amp;&amp; entry.isDirectory()) &#123;</span><br><span class="line">                files.addAll(listFiles(entry, filter, <span class="keyword">true</span>));</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// Return collection of files</span></span><br><span class="line">        <span class="keyword">return</span> files;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+</li>
+</ol>
+<br>
+<br>
+<br>插件编写，以及源码
+
+<ul>
+<li>如何缩短单独运行的命令行<br>如何运行的</li>
+<li><br>
+
+
+
+</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/maven/" rel="tag"># maven</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/06/01/getResourceAsStream%20%E5%9C%A8class%E5%92%8Cclassloader%E7%9A%84%E5%BC%82%E5%90%8C/" rel="next" title="getResourceAsStream 在class和classloader的异同">
+                <i class="fa fa-chevron-left"></i> getResourceAsStream 在class和classloader的异同
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/shawsshank-2.png"
+                alt="古树" />
+            
+              <p class="site-author-name" itemprop="name">古树</p>
+              <p class="site-description motion-element" itemprop="description">Hi buddy, look at you...</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives">
+              
+                  <span class="site-state-item-count">8</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">9</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#refer"><span class="nav-number">1.</span> <span class="nav-text">refer</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#maven的一些知识整理"><span class="nav-number">2.</span> <span class="nav-text">maven的一些知识整理</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#"><span class="nav-number">2.1.</span> <span class="nav-text">
+</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-maven的仲裁机制"><span class="nav-number">2.2.</span> <span class="nav-text">1. maven的仲裁机制</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-exclude-optional的区别"><span class="nav-number">2.3.</span> <span class="nav-text">2.  exclude+optional的区别</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-dependency的scope及其传递性"><span class="nav-number">2.4.</span> <span class="nav-text">4. dependency的scope及其传递性</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-生命周期简单介绍"><span class="nav-number">2.5.</span> <span class="nav-text">1. 生命周期简单介绍</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-插件编写"><span class="nav-number">2.6.</span> <span class="nav-text">2. 插件编写</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#一个插件的具体的例子"><span class="nav-number">2.6.1.</span> <span class="nav-text">一个插件的具体的例子</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">古树</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      访客数
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      人
+    </span>
+  
+
+  
+    <span class="site-pv">
+      总访问量
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      次
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+  
+  
+  
+  <link rel="stylesheet" href="/lib/algolia-instant-search/instantsearch.min.css">
+
+  
+  
+  <script src="/lib/algolia-instant-search/instantsearch.min.js"></script>
+  
+
+  <script src="/js/src/algolia-search.js?v=5.1.4"></script>
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
