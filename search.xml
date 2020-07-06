@@ -1,6 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>HTTPS认证过程</title>
+    <url>/2020/05/19/HTTPS%E8%AE%A4%E8%AF%81%E8%BF%87%E7%A8%8B/</url>
+    <content><![CDATA[<h3 id="refer"><a href="#refer" class="headerlink" title="refer"></a>refer</h3><p>以下两篇文章对HTTPS解析的很详细，有图有真相，很好理解:</p>
+<ul>
+<li><a href="https://www.cnblogs.com/snowater/p/7804889.html" target="_blank" rel="noopener">https://www.cnblogs.com/snowater/p/7804889.html</a></li>
+<li><a href="https://www.cnblogs.com/xdyixia/p/11610102.html" target="_blank" rel="noopener">https://www.cnblogs.com/xdyixia/p/11610102.html</a></li>
+</ul>
+<h3 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h3><p>HTTPS是在HTTP跟TCP之间加了一层对数据进行加解密的SSL/TLS</p>
+<ul>
+<li>SSL: Secure Sockets Layer</li>
+<li>TLS: Transport Layer Security</li>
+</ul>
+<p><br>HTTPS认证过程, 主要有三部分</p>
+<ul>
+<li>Server证书的认证阶段, 即得到CA机构的签名</li>
+<li>Server跟Client之间通过非对称的方式验证彼此身份</li>
+<li>Server跟Client之间通过双方认同的随机数做对称加密数据传输</li>
+</ul>
+<p><br><img src="https-1.svg" alt="证书的认证，以及HTTPS的工作流程.svg"></p>
+]]></content>
+      <categories>
+        <category>https</category>
+      </categories>
+      <tags>
+        <tag>https</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Java类的初始化过程</title>
     <url>/2020/05/05/Java%E7%B1%BB%E7%9A%84%E5%88%9D%E5%A7%8B%E5%8C%96%E8%BF%87%E7%A8%8B/</url>
     <content><![CDATA[<br>
@@ -124,34 +152,6 @@
       </tags>
   </entry>
   <entry>
-    <title>HTTPS认证过程</title>
-    <url>/2020/05/19/HTTPS%E8%AE%A4%E8%AF%81%E8%BF%87%E7%A8%8B/</url>
-    <content><![CDATA[<h3 id="refer"><a href="#refer" class="headerlink" title="refer"></a>refer</h3><p>以下两篇文章对HTTPS解析的很详细，有图有真相，很好理解:</p>
-<ul>
-<li><a href="https://www.cnblogs.com/snowater/p/7804889.html" target="_blank" rel="noopener">https://www.cnblogs.com/snowater/p/7804889.html</a></li>
-<li><a href="https://www.cnblogs.com/xdyixia/p/11610102.html" target="_blank" rel="noopener">https://www.cnblogs.com/xdyixia/p/11610102.html</a></li>
-</ul>
-<h3 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h3><p>HTTPS是在HTTP跟TCP之间加了一层对数据进行加解密的SSL/TLS</p>
-<ul>
-<li>SSL: Secure Sockets Layer</li>
-<li>TLS: Transport Layer Security</li>
-</ul>
-<p><br>HTTPS认证过程, 主要有三部分</p>
-<ul>
-<li>Server证书的认证阶段, 即得到CA机构的签名</li>
-<li>Server跟Client之间通过非对称的方式验证彼此身份</li>
-<li>Server跟Client之间通过双方认同的随机数做对称加密数据传输</li>
-</ul>
-<p><br><img src="https-1.svg" alt="证书的认证，以及HTTPS的工作流程.svg"></p>
-]]></content>
-      <categories>
-        <category>https</category>
-      </categories>
-      <tags>
-        <tag>https</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>annotation定义的总结</title>
     <url>/2020/05/16/%5BAnnotation%5D%20annotation%E5%AE%9A%E4%B9%89%E7%9A%84%E6%80%BB%E7%BB%93/</url>
     <content><![CDATA[<h1 id="Annotation-annotation定义的总结"><a href="#Annotation-annotation定义的总结" class="headerlink" title="[Annotation] annotation定义的总结"></a>[Annotation] annotation定义的总结</h1><p><a name="tyC3q"></a></p>
@@ -257,6 +257,54 @@
       </categories>
       <tags>
         <tag>java</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>xml的 context:property-placeholder 的SpringBoot方式实现</title>
+    <url>/2020/07/06/property-placeholder%E7%9A%84SpringBoot%E6%96%B9%E5%BC%8F%E5%AE%9E%E7%8E%B0/</url>
+    <content><![CDATA[<p><br>当我们从配置中心读取配置信息的时候，通常会将读取配置中心的代码封装成一个bean. 然后将该bean赋予给PropertyPlaceHolder. <br><br><br><br><br><br><br></p>
+<p><a name="CGtVZ"></a></p>
+<h3 id="spring配置文件方式实现"><a href="#spring配置文件方式实现" class="headerlink" title="spring配置文件方式实现"></a>spring配置文件方式实现</h3><figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"hulkConfigBean"</span> <span class="attr">class</span>=<span class="string">"com.xxx.config.MousikaPropertiesFactoryBean"</span> &gt;</span></span><br><span class="line">       <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"appName"</span> <span class="attr">value</span>=<span class="string">"demo"</span>&gt;</span><span class="tag">&lt;/<span class="name">property</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">bean</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">context:property-placeholder</span> <span class="attr">properties-ref</span>=<span class="string">"hulkConfigBean"</span>/&gt;</span></span><br></pre></td></tr></table></figure>
+
+<br>
+
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MousikaPropertiesFactoryBean</span> <span class="keyword">implements</span> <span class="title">FactoryBean</span>&lt;<span class="title">Properties</span>&gt;, <span class="title">EnvironmentAware</span> </span>&#123;</span><br><span class="line">    <span class="keyword">protected</span> <span class="keyword">static</span> Logger logger = LoggerFactory.getLogger(MousikaPropertiesFactoryBean<span class="class">.<span class="keyword">class</span>)</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Properties deployProperties = <span class="keyword">new</span> Properties();</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">boolean</span> isInit = <span class="keyword">false</span>;</span><br><span class="line">    <span class="keyword">private</span> Object lock = <span class="keyword">new</span> Object();</span><br><span class="line">    <span class="keyword">private</span> String appName;</span><br><span class="line">    <span class="keyword">private</span> List&lt;String&gt; nameSpaces;</span><br><span class="line">    <span class="keyword">private</span> Environment environment;</span><br><span class="line">    List&lt;Config&gt; configs = <span class="keyword">new</span> ArrayList&lt;Config&gt;();</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">MousikaPropertiesFactoryBean</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> Class&lt;?&gt; getObjectType() &#123;</span><br><span class="line">        <span class="keyword">return</span> Properties<span class="class">.<span class="keyword">class</span></span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isSingleton</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/** 这是 FactoryBean 获取bean时调用的方法，以下这种方式会调用更改犯法</span></span><br><span class="line"><span class="comment">    &lt;bean id="hulkConfigBean" class="com.xxx.config.MousikaPropertiesFactoryBean" &gt;</span></span><br><span class="line"><span class="comment">        &lt;property name="appName" value="demo"&gt;&lt;/property&gt;</span></span><br><span class="line"><span class="comment"> 	&lt;/bean&gt;</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Properties <span class="title">getObject</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (!<span class="keyword">this</span>.isInit) &#123;</span><br><span class="line">            <span class="keyword">synchronized</span>(<span class="keyword">this</span>.lock) &#123;</span><br><span class="line">                <span class="keyword">if</span> (!<span class="keyword">this</span>.isInit) &#123;</span><br><span class="line">                    ...</span><br><span class="line">                    Properties properties =    <span class="keyword">this</span>.getAppConfigFromApollo();</span><br><span class="line">                    <span class="keyword">this</span>.deployProperties.putAll(properties);</span><br><span class="line">                    ...</span><br><span class="line">                    <span class="keyword">this</span>.isInit = <span class="keyword">true</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">this</span>.deployProperties;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setAppName</span><span class="params">(String appName)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.appName = appName;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">private</span> Properties <span class="title">getAppConfigFromApollo</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line"></span><br><span class="line">        Properties properties = <span class="keyword">new</span> Properties();</span><br><span class="line">        <span class="comment">// 从配置中心获取配置信息</span></span><br><span class="line">        configs.add(getConfigFromRemote())</span><br><span class="line">        <span class="keyword">if</span> (configs.size() &gt; <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">for</span> (Config config : configs) &#123;</span><br><span class="line">                properties.putAll(config.getAllProperties());</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> properties;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p><a name="Sqhpj"></a></p>
+<h3 id="运行机制解析"><a href="#运行机制解析" class="headerlink" title="运行机制解析"></a>运行机制解析</h3><p><a name="C4jzH"></a></p>
+<h4 id="xml文件设置过程"><a href="#xml文件设置过程" class="headerlink" title="xml文件设置过程"></a>xml文件设置过程</h4><p>Spring在启动的时候，会解析xml文件，是通过org.springframework.context.config.PropertyPlaceholderBeanDefinitionParser进行解析，然后将属性设置在org.springframework.context.support.PropertySourcesPlaceholderConfigurer中<br><img src="/2020/07/06/property-placeholder%E7%9A%84SpringBoot%E6%96%B9%E5%BC%8F%E5%AE%9E%E7%8E%B0/1.png" alt="image.png"><br><br><br></p>
+<ol>
+<li>解析xml <code>&lt;context:property-placeholder properties-ref=&quot;configBean&quot;/&gt;</code> 的代码是<br><br>代码位置: org.springframework.context.config.AbstractPropertyLoadingBeanDefinitionParser#doParse<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doParse</span><span class="params">(Element element, ParserContext parserContext, BeanDefinitionBuilder builder)</span> </span>&#123;</span><br><span class="line">		...</span><br><span class="line">		String propertiesRef = element.getAttribute(<span class="string">"properties-ref"</span>);</span><br><span class="line">		<span class="keyword">if</span> (StringUtils.hasLength(propertiesRef)) &#123;</span><br><span class="line">			builder.addPropertyReference(<span class="string">"properties"</span>, propertiesRef);</span><br><span class="line">		&#125;</span><br><span class="line">		...</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+
+</li>
+</ol>
+<ol start="2">
+<li>将beanName以RuntimeBeanReference的形式包装起来:<br><br>代码位置： org.springframework.beans.factory.support.BeanDefinitionBuilder#addPropertyReference<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> BeanDefinitionBuilder <span class="title">addPropertyReference</span><span class="params">(String name, String beanName)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 这里将beanName以 RuntimeBeanReference包装起来</span></span><br><span class="line">    <span class="keyword">this</span>.beanDefinition.getPropertyValues().add(name, <span class="keyword">new</span> RuntimeBeanReference(beanName));</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">this</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+</li>
+</ol>
+<p><a name="HOAvi"></a></p>
+<h4 id="propertyValue数据读取与设置"><a href="#propertyValue数据读取与设置" class="headerlink" title="propertyValue数据读取与设置"></a>propertyValue数据读取与设置</h4><p><br>在处理 org.springframework.context.config.PropertyPlaceholderBeanDefinitionParser 的时候，会通过以下代码进行处理<br><br><br>org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory#applyPropertyValues</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">applyPropertyValues</span><span class="params">(String beanName, BeanDefinition mbd, BeanWrapper bw, PropertyValues pvs)</span> </span>&#123;</span><br><span class="line">		...</span><br><span class="line">		<span class="keyword">for</span> (PropertyValue pv : original) &#123;</span><br><span class="line">			<span class="keyword">if</span> (pv.isConverted()) &#123;</span><br><span class="line">				deepCopy.add(pv);</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">else</span> &#123;</span><br><span class="line">				String propertyName = pv.getName();</span><br><span class="line">				Object originalValue = pv.getValue();</span><br><span class="line">                <span class="comment">// 这里会去获取 hulkConfigBean 的bean对象. 通过上文可知获取到的是一个Properties</span></span><br><span class="line">				Object resolvedValue = valueResolver.resolveValueIfNecessary(pv, originalValue);</span><br><span class="line">				...</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="/2020/07/06/property-placeholder%E7%9A%84SpringBoot%E6%96%B9%E5%BC%8F%E5%AE%9E%E7%8E%B0/2.png" alt="image.png"><br><br><br><br><br>org.springframework.beans.factory.support.BeanDefinitionValueResolver#resolveValueIfNecessary</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> Object <span class="title">resolveValueIfNecessary</span><span class="params">(Object argName, Object value)</span> </span>&#123;</span><br><span class="line">		<span class="comment">// We must check each value to see whether it requires a runtime reference</span></span><br><span class="line">		<span class="comment">// to another bean to be resolved.</span></span><br><span class="line">		<span class="keyword">if</span> (value <span class="keyword">instanceof</span> RuntimeBeanReference) &#123;</span><br><span class="line">			RuntimeBeanReference ref = (RuntimeBeanReference) value;</span><br><span class="line">			<span class="keyword">return</span> resolveReference(argName, ref);</span><br><span class="line">		&#125;</span><br><span class="line">    ....</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> Object <span class="title">resolveReference</span><span class="params">(Object argName, RuntimeBeanReference ref)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">try</span> &#123;</span><br><span class="line">			String refName = ref.getBeanName();</span><br><span class="line">			refName = String.valueOf(doEvaluate(refName));</span><br><span class="line">			<span class="keyword">if</span> (ref.isToParent()) &#123;</span><br><span class="line">				<span class="keyword">if</span> (<span class="keyword">this</span>.beanFactory.getParentBeanFactory() == <span class="keyword">null</span>) &#123;</span><br><span class="line">					<span class="keyword">throw</span> <span class="keyword">new</span> BeanCreationException(</span><br><span class="line">							<span class="keyword">this</span>.beanDefinition.getResourceDescription(), <span class="keyword">this</span>.beanName,</span><br><span class="line">							<span class="string">"Can't resolve reference to bean '"</span> + refName +</span><br><span class="line">							<span class="string">"' in parent factory: no parent factory available"</span>);</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="keyword">return</span> <span class="keyword">this</span>.beanFactory.getParentBeanFactory().getBean(refName);</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="comment">// 会走到这里，然后获取hulkConfigBean的内容(一个properties)</span></span><br><span class="line">				Object bean = <span class="keyword">this</span>.beanFactory.getBean(refName);</span><br><span class="line">				<span class="keyword">this</span>.beanFactory.registerDependentBean(refName, <span class="keyword">this</span>.beanName);</span><br><span class="line">				<span class="keyword">return</span> bean;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">catch</span> (BeansException ex) &#123;</span><br><span class="line">			<span class="keyword">throw</span> <span class="keyword">new</span> BeanCreationException(</span><br><span class="line">					<span class="keyword">this</span>.beanDefinition.getResourceDescription(), <span class="keyword">this</span>.beanName,</span><br><span class="line">					<span class="string">"Cannot resolve reference to bean '"</span> + ref.getBeanName() + <span class="string">"' while setting "</span> + argName, ex);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+<br>
+
+<p><a name="g5zNs"></a></p>
+<h3 id="SpringBoot-等价写法"><a href="#SpringBoot-等价写法" class="headerlink" title="SpringBoot 等价写法"></a>SpringBoot 等价写法</h3><p>不采用xml的方式，使用编程的方式的写法如下:</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">NonMemBizConfig</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> MousikaPropertiesFactoryBean <span class="title">hulkConfigBean</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        MousikaPropertiesFactoryBean item = <span class="keyword">new</span> MousikaPropertiesFactoryBean();</span><br><span class="line">        item.setAppName(<span class="string">"demo"</span>);</span><br><span class="line">        <span class="keyword">return</span> item;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> PropertySourcesPlaceholderConfigurer <span class="title">propertySourcesPlaceholderConfigurer</span><span class="params">()</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer = <span class="keyword">new</span> PropertySourcesPlaceholderConfigurer();</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            propertySourcesPlaceholderConfigurer.setProperties(hulkConfigBean().getObject());</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> propertySourcesPlaceholderConfigurer;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+]]></content>
+      <categories>
+        <category>spring</category>
+        <category>springboot</category>
+      </categories>
+      <tags>
+        <tag>spring</tag>
+        <tag>springboot</tag>
       </tags>
   </entry>
   <entry>
