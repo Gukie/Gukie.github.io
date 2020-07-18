@@ -208,74 +208,175 @@
       </tags>
   </entry>
   <entry>
-    <title>Spring的BeanFactory.getBeansOfType的坑</title>
-    <url>/2020/05/07/Spring%E7%9A%84BeanFactory.getBeansOfType%E7%9A%84%E5%9D%91/</url>
-    <content><![CDATA[<p><a name="MojXv"></a></p>
-<h3 id="背景及问题发现"><a href="#背景及问题发现" class="headerlink" title="背景及问题发现"></a>背景及问题发现</h3><p>有时候，我们会在spring的bean实例化之前做一些校验，比如校验某些package下的类的命名是否符合规范，此时就会去实现 BeanDefinitionRegistryPostProcessor 做一些事情<br><br><br>我们假设，我们需要校验的类都实现了一个interface，名叫: IProxyBaseService， 那么我们很自然的就会有以下思路</p>
+    <title>使用松散索引优化SQL</title>
+    <url>/2020/07/18/%E4%BD%BF%E7%94%A8%E6%9D%BE%E6%95%A3%E7%B4%A2%E5%BC%95%E4%BC%98%E5%8C%96SQL/</url>
+    <content><![CDATA[<p><a name="rEULd"></a></p>
+<h3 id="refer"><a href="#refer" class="headerlink" title="refer"></a>refer</h3><ul>
+<li><a href="https://dev.mysql.com/doc/refman/5.7/en/group-by-optimization.html" target="_blank" rel="noopener">https://dev.mysql.com/doc/refman/5.7/en/group-by-optimization.html</a> (松散索引的官方解释)</li>
+</ul>
+<p><a name="yjrHT"></a></p>
+<h3 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h3><p><br>对于物联网行业来说，当业务增长之后，其对应的数据增长的速度是非常快的，因为设备每时每刻都在产生数据，这样某些表上的数据已经悄悄的上了千万级别，这时候就急需对其做一定的优化。其中最常见的就是水平拆分了。拆分之前第一步要做的就是数据统计分析，而由于数据量级摆在这儿，所以在统计的时候SQL执行超时就很常见了，这时候就需要做优化<br><br><br><br><br>假设某个表记录的设备的上报记录，而且该表由于历史原因存储的不止一种业务数据，其的结构如下:</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> <span class="string">`dev_history`</span> (</span><br><span class="line"><span class="string">`id`</span> <span class="built_in">bigint</span>(<span class="number">20</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> AUTO_INCREMENT,</span><br><span class="line"><span class="string">`dev_id`</span> <span class="built_in">varchar</span>(<span class="number">64</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">'设备id'</span>,</span><br><span class="line"><span class="string">`value`</span> <span class="built_in">varchar</span>(<span class="number">64</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">DEFAULT</span> <span class="string">''</span> <span class="keyword">COMMENT</span> <span class="string">'value'</span>,</span><br><span class="line"><span class="string">`status`</span> <span class="built_in">smallint</span>(<span class="number">1</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">'状态'</span>,</span><br><span class="line"><span class="string">`gmt_create`</span> <span class="built_in">bigint</span>(<span class="number">20</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span>,</span><br><span class="line"><span class="string">`gmt_modified`</span> <span class="built_in">bigint</span>(<span class="number">20</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span>,</span><br><span class="line">PRIMARY <span class="keyword">KEY</span> (<span class="string">`id`</span>),</span><br><span class="line"><span class="keyword">UNIQUE</span> <span class="keyword">KEY</span> <span class="string">`idx_devid`</span> (<span class="string">`dev_id`</span>,)</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+<p>现在希望将某个业务的数据统计出来，然后做拆分。统计分析的工作主要分两块:</p>
 <ul>
-<li>获取所有 IProxyBaseService的bean的定义</li>
-<li>通过该bean找到对应的class，然后通过反射校验他们的方法是否合规</li>
+<li>将每条设备有多少条记录找出来</li>
+<li>对每个设备进行分析，分析其是否是你期望的业务</li>
 </ul>
-<p><br>代码如下</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">postProcessBeanFactory</span><span class="params">(ConfigurableListableBeanFactory beanFactory)</span> <span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line"></span><br><span class="line">        Map&lt;String, IProxyBaseService&gt; nameInstanceMap = beanFactory.getBeansOfType(IProxyBaseService<span class="class">.<span class="keyword">class</span>)</span>;</span><br><span class="line">        <span class="keyword">if</span> (MapUtils.isEmpty(nameInstanceMap)) &#123;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        nameInstanceMap.forEach((beanName, beanInstance) -&gt; &#123;</span><br><span class="line">            Set&lt;Class&lt;?&gt;&gt; interfaces = ClassUtils.getAllInterfacesAsSet(beanInstance);</span><br><span class="line">            <span class="keyword">if</span> (CollectionUtils.isEmpty(interfaces)) &#123;</span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">for</span> (Class&lt;?&gt; interfaceCls : interfaces) &#123;</span><br><span class="line">                <span class="keyword">if</span> (!ClassUtils.isAssignable(IProxyBaseService<span class="class">.<span class="keyword">class</span>, <span class="title">interfaceCls</span>)) </span>&#123;</span><br><span class="line">                    <span class="keyword">continue</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                checkInterfaceMethods(interfaceCls);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>有了上面两个数据，就可以知道知道数据增长的趋势，从而对如何水平拆分提供参考.<br><br><br></p>
+<p><a name="FSoQK"></a></p>
+<h3 id="经过"><a href="#经过" class="headerlink" title="经过"></a>经过</h3><p>对于统计每个设备的有多少数量，一开始SQL写成如下这样</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">select</span> dev_id, <span class="keyword">count</span>(<span class="keyword">id</span>) <span class="keyword">as</span> <span class="keyword">count</span> <span class="keyword">from</span> dev_history <span class="keyword">group</span> <span class="keyword">by</span> dev_id;</span><br></pre></td></tr></table></figure>
 
-<p><br>如果系统中使用了dubbo，那么坑就来了: 当果你的dubbo的配置是通过占位符来做的，那么你将获取不到对应占位符的值</p>
-<figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dubbo:registry</span> <span class="attr">protocol</span>=<span class="string">"zookeeper"</span> <span class="attr">address</span>=<span class="string">"$&#123;zookeeper.address&#125;"</span>/&gt;</span></span><br></pre></td></tr></table></figure>
-<p>最后报以下错误:</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Caused by: java.lang.IllegalStateException: zookeeper not connected</span><br><span class="line">    at org.apache.dubbo.remoting.zookeeper.curator.CuratorZookeeperClient.&lt;init&gt;(CuratorZookeeperClient.java:83)</span><br><span class="line">    at org.apache.dubbo.remoting.zookeeper.curator.CuratorZookeeperTransporter.createZookeeperClient(CuratorZookeeperTransporter.java:26)</span><br><span class="line">    at org.apache.dubbo.remoting.zookeeper.support.AbstractZookeeperTransporter.connect(AbstractZookeeperTransporter.java:68)</span><br><span class="line">    at org.apache.dubbo.remoting.zookeeper.ZookeeperTransporter$Adaptive.connect(ZookeeperTransporter$Adaptive.java)</span><br><span class="line">    at org.apache.dubbo.configcenter.support.zookeeper.ZookeeperDynamicConfiguration.&lt;init&gt;(ZookeeperDynamicConfiguration.java:62)</span><br><span class="line">    at org.apache.dubbo.configcenter.support.zookeeper.ZookeeperDynamicConfigurationFactory.createDynamicConfiguration(ZookeeperDynamicConfigurationFactory.java:37)</span><br></pre></td></tr></table></figure>
-
-<p><br>这时候如果没有认真debug过，会认为zk链接不上了，然后把问题指向zk，从而偏离了问题的本质<br></p>
-<p><a name="MERTr"></a></p>
-<h3 id="排查过程"><a href="#排查过程" class="headerlink" title="排查过程"></a>排查过程</h3><p>从报错看，我们可以讲断点放在 <code>CuratorZookeeperClient.java:83</code>， 然后会发现，此时的地址都是占位符的<br><img src="/2020/05/07/Spring%E7%9A%84BeanFactory.getBeansOfType%E7%9A%84%E5%9D%91/spring-1.png" alt="image.png"><br><br><br>此时我们可以将我们自己写的代码注释掉，看看结果是什么样的，会发现其实是有值的，那么可以断定是代码的问题<br><img src="/2020/05/07/Spring%E7%9A%84BeanFactory.getBeansOfType%E7%9A%84%E5%9D%91/spring-2.png" alt="image.png"><br><br><br><br><br><br><br>经过排查，发现这一行代码有问题</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">Map&lt;String, IProxyBaseService&gt; nameInstanceMap = beanFactory.getBeansOfType(IProxyBaseService<span class="class">.<span class="keyword">class</span>)</span>;</span><br></pre></td></tr></table></figure>
-<p>该代码会去找IProxyBaseService类的bean，但是它是使用了缺省参数的方法:<br>org.springframework.beans.factory.support.DefaultListableBeanFactory#getBeansOfType<br><img src="/2020/05/07/Spring%E7%9A%84BeanFactory.getBeansOfType%E7%9A%84%E5%9D%91/spring-3.png" alt="image.png"><br><br><br>再往下会发现<br>org.springframework.beans.factory.support.DefaultListableBeanFactory#doGetBeanNamesForType</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 这里的 allowEagerInit 会让条件为true</span></span><br><span class="line"><span class="keyword">if</span> (!mbd.isAbstract() &amp;&amp; (allowEagerInit ||</span><br><span class="line">        (mbd.hasBeanClass() || !mbd.isLazyInit() || isAllowEagerClassLoading()) &amp;&amp;</span><br><span class="line">                !requiresEagerInitForType(mbd.getFactoryBeanName()))) &#123;</span><br><span class="line">    <span class="comment">// In case of FactoryBean, match object created by FactoryBean.</span></span><br><span class="line">    <span class="keyword">boolean</span> isFactoryBean = isFactoryBean(beanName, mbd);</span><br><span class="line">    BeanDefinitionHolder dbd = mbd.getDecoratedDefinition();</span><br><span class="line">    <span class="keyword">boolean</span> matchFound =</span><br><span class="line">            (allowEagerInit || !isFactoryBean ||</span><br><span class="line">                    (dbd != <span class="keyword">null</span> &amp;&amp; !mbd.isLazyInit()) || containsSingleton(beanName)) &amp;&amp;</span><br><span class="line">            (includeNonSingletons ||</span><br><span class="line">                    (dbd != <span class="keyword">null</span> ? mbd.isSingleton() : isSingleton(beanName))) &amp;&amp;</span><br><span class="line">        <span class="comment">// 会进入到这里去  </span></span><br><span class="line">        isTypeMatch(beanName, type);</span><br><span class="line">    <span class="keyword">if</span> (!matchFound &amp;&amp; isFactoryBean) &#123;</span><br><span class="line">        <span class="comment">// In case of FactoryBean, try to match FactoryBean instance itself next.</span></span><br><span class="line">        beanName = FACTORY_BEAN_PREFIX + beanName;</span><br><span class="line">        matchFound = (includeNonSingletons || mbd.isSingleton()) &amp;&amp; isTypeMatch(beanName, type);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (matchFound) &#123;</span><br><span class="line">        result.add(beanName);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p><br>然后会进入到<br>org.springframework.beans.factory.support.AbstractBeanFactory#isTypeMatch的以下代码段</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 这里会校验当前类是否是FactoryBean</span></span><br><span class="line"><span class="keyword">if</span> (FactoryBean<span class="class">.<span class="keyword">class</span>.<span class="title">isAssignableFrom</span>(<span class="title">beanType</span>)) </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (!BeanFactoryUtils.isFactoryDereference(name)) &#123;</span><br><span class="line">        <span class="comment">// If it's a FactoryBean, we want to look at what it creates, not the factory class.</span></span><br><span class="line">        beanType = getTypeForFactoryBean(beanName, mbd);</span><br><span class="line">        <span class="keyword">if</span> (beanType == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p><br><img src="/2020/05/07/Spring%E7%9A%84BeanFactory.getBeansOfType%E7%9A%84%E5%9D%91/spring-4.png" alt="image.png"><br>而org.apache.dubbo.config.spring.ReferenceBean 正好是一个FactoryBean</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ReferenceBean</span>&lt;<span class="title">T</span>&gt; <span class="keyword">extends</span> <span class="title">ReferenceConfig</span>&lt;<span class="title">T</span>&gt; <span class="keyword">implements</span> <span class="title">FactoryBean</span>, <span class="title">ApplicationContextAware</span>, <span class="title">InitializingBean</span>, <span class="title">DisposableBean</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<br>
-<br>这样就会尝试去实例化ReferenceBean了，最后就会走到org.apache.dubbo.config.spring.ReferenceBean#afterPropertiesSet， 由于现在还只是在BeanDefinition处理阶段，还并没有到占位符的设置阶段，所以是读取不到占位符的值的，所以它还是原来的模样: ${zookeeper.address}, 并没有变形<br>
-<br>
-
-<p><img src="/2020/05/07/Spring%E7%9A%84BeanFactory.getBeansOfType%E7%9A%84%E5%9D%91/spring-5.png" alt="image.png"></p>
-<p><a name="up6HB"></a></p>
-<h3 id="解决"><a href="#解决" class="headerlink" title="解决"></a>解决</h3><p>知道问题的原因了: beanFactory.getBeansOfType的参数allowEagerInit=true时会将FactoryBean初始化掉。<br>所以改起来也很简单，就是使用另外一个方法:<br><code>beanFactory.getBeansOfType(IProxyBaseService.class,false, false);</code><br><br><br>最终代码如下：</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">postProcessBeanFactory</span><span class="params">(ConfigurableListableBeanFactory beanFactory)</span> <span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line"></span><br><span class="line">        Map&lt;String, IProxyBaseService&gt; nameInstanceMap = beanFactory.getBeansOfType(IProxyBaseService<span class="class">.<span class="keyword">class</span>,<span class="title">false</span>, <span class="title">false</span>)</span>;</span><br><span class="line">        <span class="keyword">if</span> (MapUtils.isEmpty(nameInstanceMap)) &#123;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        nameInstanceMap.forEach((beanName, beanInstance) -&gt; &#123;</span><br><span class="line">            Set&lt;Class&lt;?&gt;&gt; interfaces = ClassUtils.getAllInterfacesAsSet(beanInstance);</span><br><span class="line">            <span class="keyword">if</span> (CollectionUtils.isEmpty(interfaces)) &#123;</span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">for</span> (Class&lt;?&gt; interfaceCls : interfaces) &#123;</span><br><span class="line">                <span class="keyword">if</span> (!ClassUtils.isAssignable(IProxyBaseService<span class="class">.<span class="keyword">class</span>, <span class="title">interfaceCls</span>)) </span>&#123;</span><br><span class="line">                    <span class="keyword">continue</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                checkInterfaceMethods(interfaceCls);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-
-<br>
-
-<p><a name="LfS6k"></a></p>
-<h3 id="事情还在继续"><a href="#事情还在继续" class="headerlink" title="事情还在继续"></a>事情还在继续</h3><p><br>然而事情并没有那么简单，在后面的测试中，会发现，实现了IProxyBaseService的类，其field都是null.<br><img src="/2020/05/07/Spring%E7%9A%84BeanFactory.getBeansOfType%E7%9A%84%E5%9D%91/spring-6.png" alt="image.png"><br><br><br>这很严重啊。既然是都为空，那么看看它是什么时候进行初始化的，然后找了一个类，在其后面加了个InitializingBean进行断点调试</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DeviceProxyServiceImpl</span> <span class="keyword">implements</span> <span class="title">IDeviceProxyService</span>, <span class="title">InitializingBean</span></span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">afterPropertiesSet</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        log.info(<span class="string">"...."</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<br>
-<br>debug后，发现这是从 beanFactory.getBeansOfType(IProxyBaseService.class,false, false); 调用过来的。<br>代码如下: org.springframework.beans.factory.support.DefaultListableBeanFactory#getBeansOfType<br>
-
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> &lt;T&gt; <span class="function">Map&lt;String, T&gt; <span class="title">getBeansOfType</span><span class="params">(Class&lt;T&gt; type, <span class="keyword">boolean</span> includeNonSingletons, <span class="keyword">boolean</span> allowEagerInit)</span></span></span><br><span class="line"><span class="function">            <span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line">        <span class="comment">// 1.这一行，是FactoryBean初始化的问题的根源</span></span><br><span class="line">        String[] beanNames = getBeanNamesForType(type, includeNonSingletons, allowEagerInit);</span><br><span class="line">        </span><br><span class="line">        Map&lt;String, T&gt; result = <span class="keyword">new</span> LinkedHashMap&lt;String, T&gt;(beanNames.length);</span><br><span class="line">        <span class="comment">// 2.可是事情并没有完，当找出了IProxyBaseService这个类的beanName之后，就到了这</span></span><br><span class="line">        <span class="keyword">for</span> (String beanName : beanNames) &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">               <span class="comment">// 这里有一个getBean，然后就会去创建bean. 而此时bean都还没有实例化出来，所以都是null </span></span><br><span class="line">                result.put(beanName, getBean(beanName, type));</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">catch</span> (BeanCreationException ex) &#123;</span><br><span class="line">                ...</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> result;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-
-<p><br>解决方法是, 不使用beanFactory.getBeansOfType， 而是使用BeanDefinitionRegistry去获取对应的beanName，然后找到对应的class做自己的业务</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">postProcessBeanDefinitionRegistry</span><span class="params">(BeanDefinitionRegistry registry)</span> <span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line">       String[] beanNames = registry.getBeanDefinitionNames();</span><br><span class="line">       <span class="keyword">if</span> (beanNames == <span class="keyword">null</span> || beanNames.length &lt; <span class="number">1</span>) &#123;</span><br><span class="line">           <span class="keyword">return</span>;</span><br><span class="line">       &#125;</span><br><span class="line">       <span class="keyword">for</span> (String beanName : beanNames) &#123;</span><br><span class="line">           BeanDefinition beanDefinition = registry.getBeanDefinition(beanName);</span><br><span class="line">           String beanClsName = beanDefinition.getBeanClassName();</span><br><span class="line">           <span class="keyword">if</span> (!StringUtils.contains(beanClsName, <span class="string">"com.xxx.impl"</span>)) &#123;</span><br><span class="line">               <span class="keyword">continue</span>;</span><br><span class="line">           &#125;</span><br><span class="line"></span><br><span class="line">           Class cls = ClassUtils.resolveClassName(beanClsName, Thread.currentThread().getContextClassLoader());</span><br><span class="line">           Set&lt;Class&lt;?&gt;&gt; interfaces = ClassUtils.getAllInterfacesAsSet(cls);</span><br><span class="line">           <span class="keyword">if</span> (CollectionUtils.isEmpty(interfaces)) &#123;</span><br><span class="line">               <span class="keyword">continue</span>;</span><br><span class="line">           &#125;</span><br><span class="line">           <span class="keyword">for</span> (Class&lt;?&gt; interfaceCls : interfaces) &#123;</span><br><span class="line">               <span class="keyword">if</span> (!ClassUtils.isAssignable(IProxyBaseService<span class="class">.<span class="keyword">class</span>, <span class="title">interfaceCls</span>)) </span>&#123;</span><br><span class="line">                   <span class="keyword">continue</span>;</span><br><span class="line">               &#125;</span><br><span class="line">               checkInterfaceMethods(interfaceCls);</span><br><span class="line">           &#125;</span><br><span class="line">       &#125;</span><br><span class="line"></span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
-
-<br>
-
-<p><a name="dyGDj"></a></p>
-<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><ul>
-<li>在bean没有实例化好的时候，不能随便使用beanFactory.getBeansOfType这个方法，这个会坑死人的</li>
-<li>在bean没有实例化时做一些校验，能减少系统资源的开销(链接创建/资源分配等)，但实现的时候需要千万小心</li>
+<p><br>从执行计划看，走的是索引。嗯，感觉还不错，应该会挺快的。然而由于设备的数量有几十万条，所以即使走索引也会很慢，而且在统计的时候不可能一次性将几十万的数据都捞出来，统计程序会直接进ICU的<br><img src="/2020/07/18/%E4%BD%BF%E7%94%A8%E6%9D%BE%E6%95%A3%E7%B4%A2%E5%BC%95%E4%BC%98%E5%8C%96SQL/1.png" alt="image.png"><br><br><br>那怎么办，只能limit了，改造之后的SQL如下</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">select</span> dev_id <span class="keyword">as</span> devId, <span class="keyword">count</span>(<span class="keyword">id</span>) <span class="keyword">as</span> <span class="keyword">count</span> <span class="keyword">from</span> dev_history <span class="keyword">group</span> <span class="keyword">by</span> dev_id <span class="keyword">order</span> <span class="keyword">by</span> dev_id <span class="keyword">limit</span> <span class="number">0</span>, <span class="number">5000</span></span><br></pre></td></tr></table></figure>
+<p>以上SQL跑起来之后还是很容易超时:</p>
+<ul>
+<li>limit的offset到后面的时候会很大，虽然走的是索引但是还是会遍历很多无用的数据. 对于这种问题，一般会想到的做范围限制，但是由于每个设备无时无刻都在生产数据，所以他们之间不存在先后顺序(即id和gmtCreate都不适用)，所以无法做范围限制. </li>
+<li>有个小问题是: 由于group by默认会对作用的字段做排序，所以这里就不需要做 order by了</li>
 </ul>
+<br>
+
+<p><a name="IgePG"></a></p>
+<h3 id="最终解决方案"><a href="#最终解决方案" class="headerlink" title="最终解决方案"></a>最终解决方案</h3><p>最后的解决方案是: 通过松散索引来解决。松散索引是跟紧凑索引相对的。</p>
+<ul>
+<li>紧凑索引，是走了索引，一般是查找范围查找或者是 全索引查找<blockquote>
+<p>A Tight Index Scan may be either a full index scan or a range index scan, depending on the query conditions. When the conditions for a Loose Index Scan are not met, it still may be possible to avoid creation of temporary tables for <code>GROUP BY</code> queries</p>
+</blockquote>
+</li>
+</ul>
+<ul>
+<li>所谓松散索引，是在做数据统计的时候不是遍历索引，而是会跳过相同的数据。而且一般在group by的时候会使用到。比如MySQL在group by作用的所有的字段都在索引上，那么它就会走松散索引。我们这里的例子就是 dev_id是有索引的<blockquote>
+<p>The most efficient way to process <code>GROUP BY</code> is when an index is used to directly retrieve the grouping columns. With this access method, MySQL uses the property of some index types that the keys are ordered (for example, <code>BTREE</code>). This property enables use of lookup groups in an index without having to consider all keys in the index that satisfy all <code>WHERE</code> conditions. This access method considers only a fraction of the keys in an index, so it is called a Loose Index Scan. When there is no <code>WHERE</code> clause, a Loose Index Scan reads as many keys as the number of groups, which may be a much smaller number than that of all keys. If the <code>WHERE</code> clause contains range predicates (see the discussion of the <a href="https://dev.mysql.com/doc/refman/5.7/en/explain-output.html#jointype_range" target="_blank" rel="noopener"><code>range</code></a> join type in <a href="https://dev.mysql.com/doc/refman/5.7/en/using-explain.html" target="_blank" rel="noopener">Section 8.8.1, “Optimizing Queries with EXPLAIN”</a>), a Loose Index Scan looks up the first key of each group that satisfies the range conditions, and again reads the smallest possible number of keys</p>
+</blockquote>
+</li>
+</ul>
+<br>
+<br>
+<br>所以可以对我们的SQL做一定的改造
+
+<ul>
+<li>第一步中只获取不重复的dev_id</li>
+<li>第二步，再通过dev_id去获取对应的count数据。因为每个dev_id的记录数据不会很大，最多几十万，并且它有索引所以查询起来还是比较快的</li>
+</ul>
+<p>这样以来，就可以减轻每一步的压力，还能获取到对应的数据。对于第一步，获取不重复的dev_id的SQL如下</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">select</span> dev_id <span class="keyword">from</span> dev_history  <span class="keyword">where</span> <span class="number">1</span>=<span class="number">1</span> <span class="keyword">group</span> <span class="keyword">by</span> dev_id;</span><br></pre></td></tr></table></figure>
+
+<p><br>对应的执行计划如下, 其中 “<strong>Using index for group-by</strong>“ 表示的就是当前SQL执行时使用的是松散索引<br><img src="/2020/07/18/%E4%BD%BF%E7%94%A8%E6%9D%BE%E6%95%A3%E7%B4%A2%E5%BC%95%E4%BC%98%E5%8C%96SQL/2.png" alt="image.png"><br><br><br><br><br></p>
+]]></content>
+      <categories>
+        <category>MySQL</category>
+        <category>SQL优化</category>
+      </categories>
+      <tags>
+        <tag>SQL优化</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>getResourceAsStream 在class和classloader的异同</title>
+    <url>/2020/06/01/getResourceAsStream%20%E5%9C%A8class%E5%92%8Cclassloader%E7%9A%84%E5%BC%82%E5%90%8C/</url>
+    <content><![CDATA[<p><a name="6kO5S"></a></p>
+<h3 id="Java中加载资源，有两种方式"><a href="#Java中加载资源，有两种方式" class="headerlink" title="Java中加载资源，有两种方式"></a>Java中加载资源，有两种方式</h3><ul>
+<li>通过classloader的getResourceAsStream</li>
+<li>通过class的getResourceAsStream</li>
+</ul>
+<br>
+<br>他们的相同点，都是去resources下找资源，不同点是class的getResourceAsStream在找资源之前会对参数"name"进行处理。以下为源码的简单分析<br>
+<br>
+
+<p><a name="C0wO2"></a></p>
+<h4 id="java-lang-ClassLoader-getResourceAsStream"><a href="#java-lang-ClassLoader-getResourceAsStream" class="headerlink" title="java.lang.ClassLoader#getResourceAsStream"></a>java.lang.ClassLoader#getResourceAsStream</h4><ul>
+<li>name传什么，就用该name去找，不会做而外的处理<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> InputStream <span class="title">getResourceAsStream</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">        URL url = getResource(name);</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> url != <span class="keyword">null</span> ? url.openStream() : <span class="keyword">null</span>;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+
+</li>
+</ul>
+<p><a name="tyQpQ"></a></p>
+<h4 id="java-lang-Class-getResourceAsStream"><a href="#java-lang-Class-getResourceAsStream" class="headerlink" title="java.lang.Class#getResourceAsStream"></a>java.lang.Class#getResourceAsStream</h4><p>会先对传入的name做一层处理:</p>
+<ul>
+<li>如果name是以”/“为开头，那么不做处理，即: 从resources下找</li>
+<li>如果name不是以”/“为开头，则会将 调用该方法的类的package加上去. 即会从resources下找”packageName”+”name”的资源. 比如”com.test.test-1.txt”</li>
+</ul>
+<p><img src="/2020/06/01/getResourceAsStream%20%E5%9C%A8class%E5%92%8Cclassloader%E7%9A%84%E5%BC%82%E5%90%8C/1.png" alt="image.png"></p>
+<ul>
+<li>之后通过classloader去找资源<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> InputStream <span class="title">getResourceAsStream</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">        name = resolveName(name);</span><br><span class="line">        ClassLoader cl = getClassLoader0();</span><br><span class="line">        <span class="keyword">if</span> (cl==<span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="comment">// A system class.</span></span><br><span class="line">            <span class="keyword">return</span> ClassLoader.getSystemResourceAsStream(name);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> cl.getResourceAsStream(name);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Add a package name prefix if the name is not absolute Remove leading "/"</span></span><br><span class="line"><span class="comment">     * if name is absolute</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">private</span> String <span class="title">resolveName</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (name == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> name;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (!name.startsWith(<span class="string">"/"</span>)) &#123;</span><br><span class="line">            Class&lt;?&gt; c = <span class="keyword">this</span>;</span><br><span class="line">            <span class="keyword">while</span> (c.isArray()) &#123;</span><br><span class="line">                c = c.getComponentType();</span><br><span class="line">            &#125;</span><br><span class="line">            String baseName = c.getName();</span><br><span class="line">            <span class="keyword">int</span> index = baseName.lastIndexOf(<span class="string">'.'</span>);</span><br><span class="line">            <span class="keyword">if</span> (index != -<span class="number">1</span>) &#123;</span><br><span class="line">                name = baseName.substring(<span class="number">0</span>, index).replace(<span class="string">'.'</span>, <span class="string">'/'</span>)</span><br><span class="line">                    +<span class="string">"/"</span>+name;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            name = name.substring(<span class="number">1</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> name;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+<br>
+<br>
+
+<p><a name="RvqPr"></a></p>
+<h3 id="一个例子"><a href="#一个例子" class="headerlink" title="一个例子"></a>一个例子</h3><p>在找不到资源的时候，可以查看下maven打出来的target中是否包含资源, 如果找得到，那就基本都能找到，否则就要看看pom.xml中是否在builder时候将对应的资源给exclude掉了(默认都是会将resources下的资源加载进来的)<br><img src="/2020/06/01/getResourceAsStream%20%E5%9C%A8class%E5%92%8Cclassloader%E7%9A%84%E5%BC%82%E5%90%8C/2.png" alt="image.png"></p>
+<p><a name="Oo89r"></a></p>
+<h4 id="在main下的示例"><a href="#在main下的示例" class="headerlink" title="在main下的示例"></a>在main下的示例</h4><p>源码如下</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Test</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        InputStream fis1 = Thread.currentThread().getContextClassLoader().getResourceAsStream(<span class="string">"hello.txt"</span>);</span><br><span class="line">        InputStream fis2 = Thread.currentThread().getContextClassLoader().getResourceAsStream(<span class="string">"cloud_cert-daily.pfx"</span>);</span><br><span class="line">        InputStream fis3 = Thread.currentThread().getContextClassLoader().getResourceAsStream(<span class="string">"cloud_root-daily.crt"</span>);</span><br><span class="line">        InputStream fis4 = Thread.currentThread().getContextClassLoader().getResourceAsStream(<span class="string">"test.txt"</span>);</span><br><span class="line">        System.out.println(<span class="keyword">false</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="/2020/06/01/getResourceAsStream%20%E5%9C%A8class%E5%92%8Cclassloader%E7%9A%84%E5%BC%82%E5%90%8C/3.png" alt="image.png"><br><a name="lLGB4"></a></p>
+<h4 id="在test下进行的示例"><a href="#在test下进行的示例" class="headerlink" title="在test下进行的示例"></a>在test下进行的示例</h4><p>源码如下:</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">One</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        InputStream fis1 = One.class.getClassLoader().getResourceAsStream("hello2.txt");</span><br><span class="line">        InputStream fis2 = One.class.getResourceAsStream("test-1.txt");</span><br><span class="line">        InputStream fis3 = Thread.currentThread().getContextClassLoader().getResourceAsStream(<span class="string">"cert/pro/root-daily2.crt"</span>);</span><br><span class="line">        InputStream fis4 = Thread.currentThread().getContextClassLoader().getResourceAsStream(<span class="string">"test2.txt"</span>);</span><br><span class="line">        InputStream fis5 = One.class.getResourceAsStream("/test3.txt");</span><br><span class="line">        InputStream fis6 = One.class.getResourceAsStream("/cert/pro/cert-daily1.pfx");</span><br><span class="line">        System.out.println(<span class="keyword">false</span>);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="/2020/06/01/getResourceAsStream%20%E5%9C%A8class%E5%92%8Cclassloader%E7%9A%84%E5%BC%82%E5%90%8C/4.png" alt="image.png"><br><br><br></p>
+]]></content>
+      <categories>
+        <category>java</category>
+        <category>基础</category>
+      </categories>
+      <tags>
+        <tag>java</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>annotation定义的总结</title>
+    <url>/2020/05/16/%5BAnnotation%5D%20annotation%E5%AE%9A%E4%B9%89%E7%9A%84%E6%80%BB%E7%BB%93/</url>
+    <content><![CDATA[<h1 id="Annotation-annotation定义的总结"><a href="#Annotation-annotation定义的总结" class="headerlink" title="[Annotation] annotation定义的总结"></a>[Annotation] annotation定义的总结</h1><p><a name="tyC3q"></a></p>
+<h3 id="refer"><a href="#refer" class="headerlink" title="refer"></a>refer</h3><ul>
+<li><a href="https://juejin.im/post/5c63e2b0f265da2dd94c8e16" target="_blank" rel="noopener">https://juejin.im/post/5c63e2b0f265da2dd94c8e16</a> （@Inherited 使用注意点）</li>
+</ul>
+<br>
+<br>
+
+
+<table>
+<thead>
+<tr>
+<th><strong>元注解</strong></th>
+<th><strong>作用</strong></th>
+<th><strong>使用注意点</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>@Inherited</td>
+<td>是否可以继承. 即子类是否可以不用定义直接使用父类的注解</td>
+<td>使用@Inherited注意点<br>- @Inherited 并不会从接口中继承，而只会从class中继承<br>- 方法并不从它所重载的方法继承annotation<br></td>
+</tr>
+<tr>
+<td>@Retention</td>
+<td>表示在系统运行的哪个阶段出现</td>
+<td>RetentionPolicy.RUNTIME - 会被compiler记住并且会在JVM 运行时存留<br>RetentionPolicy.<em>CLASS - 会被compiler记住但是不会在JVM中存留</em></td>
+</tr>
+<tr>
+<td>@Documented</td>
+<td>是否在javadoc中出现</td>
+<td></td>
+</tr>
+<tr>
+<td>@Target</td>
+<td>定义的注解可以使用在那些地方</td>
+<td>具体可以查看 ElementType的定义<br>ElementType.<em>METHOD - 可以使用在方法上</em><br>ElementType.<em>TYPE - 可以使用在class/interface上</em></td>
+</tr>
+</tbody></table>
+<p><br>一个完整的例子</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Documented</span></span><br><span class="line"><span class="meta">@Inherited</span></span><br><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="meta">@Target</span>( &#123;ElementType.METHOD, ElementType.TYPE&#125;)</span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> TimeTraceLog &#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">long</span> <span class="title">value</span><span class="params">()</span> <span class="keyword">default</span> 200</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="function">Level <span class="title">level</span><span class="params">()</span> <span class="keyword">default</span> Level.WARN</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<br>
 <br>
 
 ]]></content>
       <categories>
-        <category>spring</category>
+        <category>java</category>
+        <category>基础</category>
       </categories>
       <tags>
         <tag>java</tag>
-        <tag>spring</tag>
+        <tag>annotation</tag>
       </tags>
   </entry>
   <entry>
@@ -346,6 +447,77 @@
       </categories>
       <tags>
         <tag>mybatis</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Spring的BeanFactory.getBeansOfType的坑</title>
+    <url>/2020/05/07/Spring%E7%9A%84BeanFactory.getBeansOfType%E7%9A%84%E5%9D%91/</url>
+    <content><![CDATA[<p><a name="MojXv"></a></p>
+<h3 id="背景及问题发现"><a href="#背景及问题发现" class="headerlink" title="背景及问题发现"></a>背景及问题发现</h3><p>有时候，我们会在spring的bean实例化之前做一些校验，比如校验某些package下的类的命名是否符合规范，此时就会去实现 BeanDefinitionRegistryPostProcessor 做一些事情<br><br><br>我们假设，我们需要校验的类都实现了一个interface，名叫: IProxyBaseService， 那么我们很自然的就会有以下思路</p>
+<ul>
+<li>获取所有 IProxyBaseService的bean的定义</li>
+<li>通过该bean找到对应的class，然后通过反射校验他们的方法是否合规</li>
+</ul>
+<p><br>代码如下</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">postProcessBeanFactory</span><span class="params">(ConfigurableListableBeanFactory beanFactory)</span> <span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line"></span><br><span class="line">        Map&lt;String, IProxyBaseService&gt; nameInstanceMap = beanFactory.getBeansOfType(IProxyBaseService<span class="class">.<span class="keyword">class</span>)</span>;</span><br><span class="line">        <span class="keyword">if</span> (MapUtils.isEmpty(nameInstanceMap)) &#123;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        nameInstanceMap.forEach((beanName, beanInstance) -&gt; &#123;</span><br><span class="line">            Set&lt;Class&lt;?&gt;&gt; interfaces = ClassUtils.getAllInterfacesAsSet(beanInstance);</span><br><span class="line">            <span class="keyword">if</span> (CollectionUtils.isEmpty(interfaces)) &#123;</span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">for</span> (Class&lt;?&gt; interfaceCls : interfaces) &#123;</span><br><span class="line">                <span class="keyword">if</span> (!ClassUtils.isAssignable(IProxyBaseService<span class="class">.<span class="keyword">class</span>, <span class="title">interfaceCls</span>)) </span>&#123;</span><br><span class="line">                    <span class="keyword">continue</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                checkInterfaceMethods(interfaceCls);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p><br>如果系统中使用了dubbo，那么坑就来了: 当果你的dubbo的配置是通过占位符来做的，那么你将获取不到对应占位符的值</p>
+<figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dubbo:registry</span> <span class="attr">protocol</span>=<span class="string">"zookeeper"</span> <span class="attr">address</span>=<span class="string">"$&#123;zookeeper.address&#125;"</span>/&gt;</span></span><br></pre></td></tr></table></figure>
+<p>最后报以下错误:</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Caused by: java.lang.IllegalStateException: zookeeper not connected</span><br><span class="line">    at org.apache.dubbo.remoting.zookeeper.curator.CuratorZookeeperClient.&lt;init&gt;(CuratorZookeeperClient.java:83)</span><br><span class="line">    at org.apache.dubbo.remoting.zookeeper.curator.CuratorZookeeperTransporter.createZookeeperClient(CuratorZookeeperTransporter.java:26)</span><br><span class="line">    at org.apache.dubbo.remoting.zookeeper.support.AbstractZookeeperTransporter.connect(AbstractZookeeperTransporter.java:68)</span><br><span class="line">    at org.apache.dubbo.remoting.zookeeper.ZookeeperTransporter$Adaptive.connect(ZookeeperTransporter$Adaptive.java)</span><br><span class="line">    at org.apache.dubbo.configcenter.support.zookeeper.ZookeeperDynamicConfiguration.&lt;init&gt;(ZookeeperDynamicConfiguration.java:62)</span><br><span class="line">    at org.apache.dubbo.configcenter.support.zookeeper.ZookeeperDynamicConfigurationFactory.createDynamicConfiguration(ZookeeperDynamicConfigurationFactory.java:37)</span><br></pre></td></tr></table></figure>
+
+<p><br>这时候如果没有认真debug过，会认为zk链接不上了，然后把问题指向zk，从而偏离了问题的本质<br></p>
+<p><a name="MERTr"></a></p>
+<h3 id="排查过程"><a href="#排查过程" class="headerlink" title="排查过程"></a>排查过程</h3><p>从报错看，我们可以讲断点放在 <code>CuratorZookeeperClient.java:83</code>， 然后会发现，此时的地址都是占位符的<br><img src="/2020/05/07/Spring%E7%9A%84BeanFactory.getBeansOfType%E7%9A%84%E5%9D%91/spring-1.png" alt="image.png"><br><br><br>此时我们可以将我们自己写的代码注释掉，看看结果是什么样的，会发现其实是有值的，那么可以断定是代码的问题<br><img src="/2020/05/07/Spring%E7%9A%84BeanFactory.getBeansOfType%E7%9A%84%E5%9D%91/spring-2.png" alt="image.png"><br><br><br><br><br><br><br>经过排查，发现这一行代码有问题</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">Map&lt;String, IProxyBaseService&gt; nameInstanceMap = beanFactory.getBeansOfType(IProxyBaseService<span class="class">.<span class="keyword">class</span>)</span>;</span><br></pre></td></tr></table></figure>
+<p>该代码会去找IProxyBaseService类的bean，但是它是使用了缺省参数的方法:<br>org.springframework.beans.factory.support.DefaultListableBeanFactory#getBeansOfType<br><img src="/2020/05/07/Spring%E7%9A%84BeanFactory.getBeansOfType%E7%9A%84%E5%9D%91/spring-3.png" alt="image.png"><br><br><br>再往下会发现<br>org.springframework.beans.factory.support.DefaultListableBeanFactory#doGetBeanNamesForType</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 这里的 allowEagerInit 会让条件为true</span></span><br><span class="line"><span class="keyword">if</span> (!mbd.isAbstract() &amp;&amp; (allowEagerInit ||</span><br><span class="line">        (mbd.hasBeanClass() || !mbd.isLazyInit() || isAllowEagerClassLoading()) &amp;&amp;</span><br><span class="line">                !requiresEagerInitForType(mbd.getFactoryBeanName()))) &#123;</span><br><span class="line">    <span class="comment">// In case of FactoryBean, match object created by FactoryBean.</span></span><br><span class="line">    <span class="keyword">boolean</span> isFactoryBean = isFactoryBean(beanName, mbd);</span><br><span class="line">    BeanDefinitionHolder dbd = mbd.getDecoratedDefinition();</span><br><span class="line">    <span class="keyword">boolean</span> matchFound =</span><br><span class="line">            (allowEagerInit || !isFactoryBean ||</span><br><span class="line">                    (dbd != <span class="keyword">null</span> &amp;&amp; !mbd.isLazyInit()) || containsSingleton(beanName)) &amp;&amp;</span><br><span class="line">            (includeNonSingletons ||</span><br><span class="line">                    (dbd != <span class="keyword">null</span> ? mbd.isSingleton() : isSingleton(beanName))) &amp;&amp;</span><br><span class="line">        <span class="comment">// 会进入到这里去  </span></span><br><span class="line">        isTypeMatch(beanName, type);</span><br><span class="line">    <span class="keyword">if</span> (!matchFound &amp;&amp; isFactoryBean) &#123;</span><br><span class="line">        <span class="comment">// In case of FactoryBean, try to match FactoryBean instance itself next.</span></span><br><span class="line">        beanName = FACTORY_BEAN_PREFIX + beanName;</span><br><span class="line">        matchFound = (includeNonSingletons || mbd.isSingleton()) &amp;&amp; isTypeMatch(beanName, type);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (matchFound) &#123;</span><br><span class="line">        result.add(beanName);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><br>然后会进入到<br>org.springframework.beans.factory.support.AbstractBeanFactory#isTypeMatch的以下代码段</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 这里会校验当前类是否是FactoryBean</span></span><br><span class="line"><span class="keyword">if</span> (FactoryBean<span class="class">.<span class="keyword">class</span>.<span class="title">isAssignableFrom</span>(<span class="title">beanType</span>)) </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (!BeanFactoryUtils.isFactoryDereference(name)) &#123;</span><br><span class="line">        <span class="comment">// If it's a FactoryBean, we want to look at what it creates, not the factory class.</span></span><br><span class="line">        beanType = getTypeForFactoryBean(beanName, mbd);</span><br><span class="line">        <span class="keyword">if</span> (beanType == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><br><img src="/2020/05/07/Spring%E7%9A%84BeanFactory.getBeansOfType%E7%9A%84%E5%9D%91/spring-4.png" alt="image.png"><br>而org.apache.dubbo.config.spring.ReferenceBean 正好是一个FactoryBean</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ReferenceBean</span>&lt;<span class="title">T</span>&gt; <span class="keyword">extends</span> <span class="title">ReferenceConfig</span>&lt;<span class="title">T</span>&gt; <span class="keyword">implements</span> <span class="title">FactoryBean</span>, <span class="title">ApplicationContextAware</span>, <span class="title">InitializingBean</span>, <span class="title">DisposableBean</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<br>
+<br>这样就会尝试去实例化ReferenceBean了，最后就会走到org.apache.dubbo.config.spring.ReferenceBean#afterPropertiesSet， 由于现在还只是在BeanDefinition处理阶段，还并没有到占位符的设置阶段，所以是读取不到占位符的值的，所以它还是原来的模样: ${zookeeper.address}, 并没有变形<br>
+<br>
+
+<p><img src="/2020/05/07/Spring%E7%9A%84BeanFactory.getBeansOfType%E7%9A%84%E5%9D%91/spring-5.png" alt="image.png"></p>
+<p><a name="up6HB"></a></p>
+<h3 id="解决"><a href="#解决" class="headerlink" title="解决"></a>解决</h3><p>知道问题的原因了: beanFactory.getBeansOfType的参数allowEagerInit=true时会将FactoryBean初始化掉。<br>所以改起来也很简单，就是使用另外一个方法:<br><code>beanFactory.getBeansOfType(IProxyBaseService.class,false, false);</code><br><br><br>最终代码如下：</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">postProcessBeanFactory</span><span class="params">(ConfigurableListableBeanFactory beanFactory)</span> <span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line"></span><br><span class="line">        Map&lt;String, IProxyBaseService&gt; nameInstanceMap = beanFactory.getBeansOfType(IProxyBaseService<span class="class">.<span class="keyword">class</span>,<span class="title">false</span>, <span class="title">false</span>)</span>;</span><br><span class="line">        <span class="keyword">if</span> (MapUtils.isEmpty(nameInstanceMap)) &#123;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        nameInstanceMap.forEach((beanName, beanInstance) -&gt; &#123;</span><br><span class="line">            Set&lt;Class&lt;?&gt;&gt; interfaces = ClassUtils.getAllInterfacesAsSet(beanInstance);</span><br><span class="line">            <span class="keyword">if</span> (CollectionUtils.isEmpty(interfaces)) &#123;</span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">for</span> (Class&lt;?&gt; interfaceCls : interfaces) &#123;</span><br><span class="line">                <span class="keyword">if</span> (!ClassUtils.isAssignable(IProxyBaseService<span class="class">.<span class="keyword">class</span>, <span class="title">interfaceCls</span>)) </span>&#123;</span><br><span class="line">                    <span class="keyword">continue</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                checkInterfaceMethods(interfaceCls);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<br>
+
+<p><a name="LfS6k"></a></p>
+<h3 id="事情还在继续"><a href="#事情还在继续" class="headerlink" title="事情还在继续"></a>事情还在继续</h3><p><br>然而事情并没有那么简单，在后面的测试中，会发现，实现了IProxyBaseService的类，其field都是null.<br><img src="/2020/05/07/Spring%E7%9A%84BeanFactory.getBeansOfType%E7%9A%84%E5%9D%91/spring-6.png" alt="image.png"><br><br><br>这很严重啊。既然是都为空，那么看看它是什么时候进行初始化的，然后找了一个类，在其后面加了个InitializingBean进行断点调试</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DeviceProxyServiceImpl</span> <span class="keyword">implements</span> <span class="title">IDeviceProxyService</span>, <span class="title">InitializingBean</span></span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">afterPropertiesSet</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        log.info(<span class="string">"...."</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<br>
+<br>debug后，发现这是从 beanFactory.getBeansOfType(IProxyBaseService.class,false, false); 调用过来的。<br>代码如下: org.springframework.beans.factory.support.DefaultListableBeanFactory#getBeansOfType<br>
+
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> &lt;T&gt; <span class="function">Map&lt;String, T&gt; <span class="title">getBeansOfType</span><span class="params">(Class&lt;T&gt; type, <span class="keyword">boolean</span> includeNonSingletons, <span class="keyword">boolean</span> allowEagerInit)</span></span></span><br><span class="line"><span class="function">            <span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line">        <span class="comment">// 1.这一行，是FactoryBean初始化的问题的根源</span></span><br><span class="line">        String[] beanNames = getBeanNamesForType(type, includeNonSingletons, allowEagerInit);</span><br><span class="line">        </span><br><span class="line">        Map&lt;String, T&gt; result = <span class="keyword">new</span> LinkedHashMap&lt;String, T&gt;(beanNames.length);</span><br><span class="line">        <span class="comment">// 2.可是事情并没有完，当找出了IProxyBaseService这个类的beanName之后，就到了这</span></span><br><span class="line">        <span class="keyword">for</span> (String beanName : beanNames) &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">               <span class="comment">// 这里有一个getBean，然后就会去创建bean. 而此时bean都还没有实例化出来，所以都是null </span></span><br><span class="line">                result.put(beanName, getBean(beanName, type));</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">catch</span> (BeanCreationException ex) &#123;</span><br><span class="line">                ...</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> result;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p><br>解决方法是, 不使用beanFactory.getBeansOfType， 而是使用BeanDefinitionRegistry去获取对应的beanName，然后找到对应的class做自己的业务</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">postProcessBeanDefinitionRegistry</span><span class="params">(BeanDefinitionRegistry registry)</span> <span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line">       String[] beanNames = registry.getBeanDefinitionNames();</span><br><span class="line">       <span class="keyword">if</span> (beanNames == <span class="keyword">null</span> || beanNames.length &lt; <span class="number">1</span>) &#123;</span><br><span class="line">           <span class="keyword">return</span>;</span><br><span class="line">       &#125;</span><br><span class="line">       <span class="keyword">for</span> (String beanName : beanNames) &#123;</span><br><span class="line">           BeanDefinition beanDefinition = registry.getBeanDefinition(beanName);</span><br><span class="line">           String beanClsName = beanDefinition.getBeanClassName();</span><br><span class="line">           <span class="keyword">if</span> (!StringUtils.contains(beanClsName, <span class="string">"com.xxx.impl"</span>)) &#123;</span><br><span class="line">               <span class="keyword">continue</span>;</span><br><span class="line">           &#125;</span><br><span class="line"></span><br><span class="line">           Class cls = ClassUtils.resolveClassName(beanClsName, Thread.currentThread().getContextClassLoader());</span><br><span class="line">           Set&lt;Class&lt;?&gt;&gt; interfaces = ClassUtils.getAllInterfacesAsSet(cls);</span><br><span class="line">           <span class="keyword">if</span> (CollectionUtils.isEmpty(interfaces)) &#123;</span><br><span class="line">               <span class="keyword">continue</span>;</span><br><span class="line">           &#125;</span><br><span class="line">           <span class="keyword">for</span> (Class&lt;?&gt; interfaceCls : interfaces) &#123;</span><br><span class="line">               <span class="keyword">if</span> (!ClassUtils.isAssignable(IProxyBaseService<span class="class">.<span class="keyword">class</span>, <span class="title">interfaceCls</span>)) </span>&#123;</span><br><span class="line">                   <span class="keyword">continue</span>;</span><br><span class="line">               &#125;</span><br><span class="line">               checkInterfaceMethods(interfaceCls);</span><br><span class="line">           &#125;</span><br><span class="line">       &#125;</span><br><span class="line"></span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+
+<br>
+
+<p><a name="dyGDj"></a></p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><ul>
+<li>在bean没有实例化好的时候，不能随便使用beanFactory.getBeansOfType这个方法，这个会坑死人的</li>
+<li>在bean没有实例化时做一些校验，能减少系统资源的开销(链接创建/资源分配等)，但实现的时候需要千万小心</li>
+</ul>
+<br>
+
+]]></content>
+      <categories>
+        <category>spring</category>
+      </categories>
+      <tags>
+        <tag>java</tag>
+        <tag>spring</tag>
       </tags>
   </entry>
   <entry>
@@ -582,114 +754,6 @@
       </categories>
       <tags>
         <tag>读书笔记</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>getResourceAsStream 在class和classloader的异同</title>
-    <url>/2020/06/01/getResourceAsStream%20%E5%9C%A8class%E5%92%8Cclassloader%E7%9A%84%E5%BC%82%E5%90%8C/</url>
-    <content><![CDATA[<p><a name="6kO5S"></a></p>
-<h3 id="Java中加载资源，有两种方式"><a href="#Java中加载资源，有两种方式" class="headerlink" title="Java中加载资源，有两种方式"></a>Java中加载资源，有两种方式</h3><ul>
-<li>通过classloader的getResourceAsStream</li>
-<li>通过class的getResourceAsStream</li>
-</ul>
-<br>
-<br>他们的相同点，都是去resources下找资源，不同点是class的getResourceAsStream在找资源之前会对参数"name"进行处理。以下为源码的简单分析<br>
-<br>
-
-<p><a name="C0wO2"></a></p>
-<h4 id="java-lang-ClassLoader-getResourceAsStream"><a href="#java-lang-ClassLoader-getResourceAsStream" class="headerlink" title="java.lang.ClassLoader#getResourceAsStream"></a>java.lang.ClassLoader#getResourceAsStream</h4><ul>
-<li>name传什么，就用该name去找，不会做而外的处理<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> InputStream <span class="title">getResourceAsStream</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">        URL url = getResource(name);</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> url != <span class="keyword">null</span> ? url.openStream() : <span class="keyword">null</span>;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-
-
-</li>
-</ul>
-<p><a name="tyQpQ"></a></p>
-<h4 id="java-lang-Class-getResourceAsStream"><a href="#java-lang-Class-getResourceAsStream" class="headerlink" title="java.lang.Class#getResourceAsStream"></a>java.lang.Class#getResourceAsStream</h4><p>会先对传入的name做一层处理:</p>
-<ul>
-<li>如果name是以”/“为开头，那么不做处理，即: 从resources下找</li>
-<li>如果name不是以”/“为开头，则会将 调用该方法的类的package加上去. 即会从resources下找”packageName”+”name”的资源. 比如”com.test.test-1.txt”</li>
-</ul>
-<p><img src="/2020/06/01/getResourceAsStream%20%E5%9C%A8class%E5%92%8Cclassloader%E7%9A%84%E5%BC%82%E5%90%8C/1.png" alt="image.png"></p>
-<ul>
-<li>之后通过classloader去找资源<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> InputStream <span class="title">getResourceAsStream</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">        name = resolveName(name);</span><br><span class="line">        ClassLoader cl = getClassLoader0();</span><br><span class="line">        <span class="keyword">if</span> (cl==<span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="comment">// A system class.</span></span><br><span class="line">            <span class="keyword">return</span> ClassLoader.getSystemResourceAsStream(name);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> cl.getResourceAsStream(name);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Add a package name prefix if the name is not absolute Remove leading "/"</span></span><br><span class="line"><span class="comment">     * if name is absolute</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">private</span> String <span class="title">resolveName</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (name == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> name;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (!name.startsWith(<span class="string">"/"</span>)) &#123;</span><br><span class="line">            Class&lt;?&gt; c = <span class="keyword">this</span>;</span><br><span class="line">            <span class="keyword">while</span> (c.isArray()) &#123;</span><br><span class="line">                c = c.getComponentType();</span><br><span class="line">            &#125;</span><br><span class="line">            String baseName = c.getName();</span><br><span class="line">            <span class="keyword">int</span> index = baseName.lastIndexOf(<span class="string">'.'</span>);</span><br><span class="line">            <span class="keyword">if</span> (index != -<span class="number">1</span>) &#123;</span><br><span class="line">                name = baseName.substring(<span class="number">0</span>, index).replace(<span class="string">'.'</span>, <span class="string">'/'</span>)</span><br><span class="line">                    +<span class="string">"/"</span>+name;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            name = name.substring(<span class="number">1</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> name;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-
-</li>
-</ul>
-<br>
-<br>
-
-<p><a name="RvqPr"></a></p>
-<h3 id="一个例子"><a href="#一个例子" class="headerlink" title="一个例子"></a>一个例子</h3><p>在找不到资源的时候，可以查看下maven打出来的target中是否包含资源, 如果找得到，那就基本都能找到，否则就要看看pom.xml中是否在builder时候将对应的资源给exclude掉了(默认都是会将resources下的资源加载进来的)<br><img src="/2020/06/01/getResourceAsStream%20%E5%9C%A8class%E5%92%8Cclassloader%E7%9A%84%E5%BC%82%E5%90%8C/2.png" alt="image.png"></p>
-<p><a name="Oo89r"></a></p>
-<h4 id="在main下的示例"><a href="#在main下的示例" class="headerlink" title="在main下的示例"></a>在main下的示例</h4><p>源码如下</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Test</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        InputStream fis1 = Thread.currentThread().getContextClassLoader().getResourceAsStream(<span class="string">"hello.txt"</span>);</span><br><span class="line">        InputStream fis2 = Thread.currentThread().getContextClassLoader().getResourceAsStream(<span class="string">"cloud_cert-daily.pfx"</span>);</span><br><span class="line">        InputStream fis3 = Thread.currentThread().getContextClassLoader().getResourceAsStream(<span class="string">"cloud_root-daily.crt"</span>);</span><br><span class="line">        InputStream fis4 = Thread.currentThread().getContextClassLoader().getResourceAsStream(<span class="string">"test.txt"</span>);</span><br><span class="line">        System.out.println(<span class="keyword">false</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p><img src="/2020/06/01/getResourceAsStream%20%E5%9C%A8class%E5%92%8Cclassloader%E7%9A%84%E5%BC%82%E5%90%8C/3.png" alt="image.png"><br><a name="lLGB4"></a></p>
-<h4 id="在test下进行的示例"><a href="#在test下进行的示例" class="headerlink" title="在test下进行的示例"></a>在test下进行的示例</h4><p>源码如下:</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">One</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        InputStream fis1 = One.class.getClassLoader().getResourceAsStream("hello2.txt");</span><br><span class="line">        InputStream fis2 = One.class.getResourceAsStream("test-1.txt");</span><br><span class="line">        InputStream fis3 = Thread.currentThread().getContextClassLoader().getResourceAsStream(<span class="string">"cert/pro/root-daily2.crt"</span>);</span><br><span class="line">        InputStream fis4 = Thread.currentThread().getContextClassLoader().getResourceAsStream(<span class="string">"test2.txt"</span>);</span><br><span class="line">        InputStream fis5 = One.class.getResourceAsStream("/test3.txt");</span><br><span class="line">        InputStream fis6 = One.class.getResourceAsStream("/cert/pro/cert-daily1.pfx");</span><br><span class="line">        System.out.println(<span class="keyword">false</span>);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p><img src="/2020/06/01/getResourceAsStream%20%E5%9C%A8class%E5%92%8Cclassloader%E7%9A%84%E5%BC%82%E5%90%8C/4.png" alt="image.png"><br><br><br></p>
-]]></content>
-      <categories>
-        <category>java</category>
-        <category>基础</category>
-      </categories>
-      <tags>
-        <tag>java</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>annotation定义的总结</title>
-    <url>/2020/05/16/%5BAnnotation%5D%20annotation%E5%AE%9A%E4%B9%89%E7%9A%84%E6%80%BB%E7%BB%93/</url>
-    <content><![CDATA[<h1 id="Annotation-annotation定义的总结"><a href="#Annotation-annotation定义的总结" class="headerlink" title="[Annotation] annotation定义的总结"></a>[Annotation] annotation定义的总结</h1><p><a name="tyC3q"></a></p>
-<h3 id="refer"><a href="#refer" class="headerlink" title="refer"></a>refer</h3><ul>
-<li><a href="https://juejin.im/post/5c63e2b0f265da2dd94c8e16" target="_blank" rel="noopener">https://juejin.im/post/5c63e2b0f265da2dd94c8e16</a> （@Inherited 使用注意点）</li>
-</ul>
-<br>
-<br>
-
-
-<table>
-<thead>
-<tr>
-<th><strong>元注解</strong></th>
-<th><strong>作用</strong></th>
-<th><strong>使用注意点</strong></th>
-</tr>
-</thead>
-<tbody><tr>
-<td>@Inherited</td>
-<td>是否可以继承. 即子类是否可以不用定义直接使用父类的注解</td>
-<td>使用@Inherited注意点<br>- @Inherited 并不会从接口中继承，而只会从class中继承<br>- 方法并不从它所重载的方法继承annotation<br></td>
-</tr>
-<tr>
-<td>@Retention</td>
-<td>表示在系统运行的哪个阶段出现</td>
-<td>RetentionPolicy.RUNTIME - 会被compiler记住并且会在JVM 运行时存留<br>RetentionPolicy.<em>CLASS - 会被compiler记住但是不会在JVM中存留</em></td>
-</tr>
-<tr>
-<td>@Documented</td>
-<td>是否在javadoc中出现</td>
-<td></td>
-</tr>
-<tr>
-<td>@Target</td>
-<td>定义的注解可以使用在那些地方</td>
-<td>具体可以查看 ElementType的定义<br>ElementType.<em>METHOD - 可以使用在方法上</em><br>ElementType.<em>TYPE - 可以使用在class/interface上</em></td>
-</tr>
-</tbody></table>
-<p><br>一个完整的例子</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Documented</span></span><br><span class="line"><span class="meta">@Inherited</span></span><br><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="meta">@Target</span>( &#123;ElementType.METHOD, ElementType.TYPE&#125;)</span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> TimeTraceLog &#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">long</span> <span class="title">value</span><span class="params">()</span> <span class="keyword">default</span> 200</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="function">Level <span class="title">level</span><span class="params">()</span> <span class="keyword">default</span> Level.WARN</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<br>
-<br>
-
-]]></content>
-      <categories>
-        <category>java</category>
-        <category>基础</category>
-      </categories>
-      <tags>
-        <tag>java</tag>
-        <tag>annotation</tag>
       </tags>
   </entry>
   <entry>

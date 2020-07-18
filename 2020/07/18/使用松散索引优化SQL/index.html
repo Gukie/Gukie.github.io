@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="java,annotation," />
+  <meta name="keywords" content="SQL优化," />
 
 
 
@@ -79,18 +79,20 @@
 
 
 
-<meta name="description" content="[Annotation] annotation定义的总结 refer https:&#x2F;&#x2F;juejin.im&#x2F;post&#x2F;5c63e2b0f265da2dd94c8e16 （@Inherited 使用注意点）         元注解 作用 使用注意点    @Inherited 是否可以继承. 即子类是否可以不用定义直接使用父类的注解 使用@Inherited注意点- @Inherited 并不会从接口">
+<meta name="description" content="SQL优化有很多种，比如尽量按需获取字段以节省网络带宽; 再比如尽量在where中排列的字段顺序命中索引，最好可以走覆盖索引。本文将介绍下在SQL过程中松散索引的使用">
 <meta property="og:type" content="article">
-<meta property="og:title" content="annotation定义的总结">
-<meta property="og:url" content="https://gukie.github.io/2020/05/16/[Annotation]%20annotation%E5%AE%9A%E4%B9%89%E7%9A%84%E6%80%BB%E7%BB%93/index.html">
+<meta property="og:title" content="使用松散索引优化SQL">
+<meta property="og:url" content="https://gukie.github.io/2020/07/18/%E4%BD%BF%E7%94%A8%E6%9D%BE%E6%95%A3%E7%B4%A2%E5%BC%95%E4%BC%98%E5%8C%96SQL/index.html">
 <meta property="og:site_name" content="远山一棵树">
-<meta property="og:description" content="[Annotation] annotation定义的总结 refer https:&#x2F;&#x2F;juejin.im&#x2F;post&#x2F;5c63e2b0f265da2dd94c8e16 （@Inherited 使用注意点）         元注解 作用 使用注意点    @Inherited 是否可以继承. 即子类是否可以不用定义直接使用父类的注解 使用@Inherited注意点- @Inherited 并不会从接口">
-<meta property="article:published_time" content="2020-05-16T03:12:25.000Z">
-<meta property="article:modified_time" content="2020-05-16T03:12:25.000Z">
+<meta property="og:description" content="SQL优化有很多种，比如尽量按需获取字段以节省网络带宽; 再比如尽量在where中排列的字段顺序命中索引，最好可以走覆盖索引。本文将介绍下在SQL过程中松散索引的使用">
+<meta property="og:image" content="https://gukie.github.io/2020/07/18/%E4%BD%BF%E7%94%A8%E6%9D%BE%E6%95%A3%E7%B4%A2%E5%BC%95%E4%BC%98%E5%8C%96SQL/1.png">
+<meta property="og:image" content="https://gukie.github.io/2020/07/18/%E4%BD%BF%E7%94%A8%E6%9D%BE%E6%95%A3%E7%B4%A2%E5%BC%95%E4%BC%98%E5%8C%96SQL/2.png">
+<meta property="article:published_time" content="2020-07-18T15:34:05.619Z">
+<meta property="article:modified_time" content="2020-07-18T15:34:05.619Z">
 <meta property="article:author" content="古树">
-<meta property="article:tag" content="java">
-<meta property="article:tag" content="annotation">
+<meta property="article:tag" content="SQL优化">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gukie.github.io/2020/07/18/%E4%BD%BF%E7%94%A8%E6%9D%BE%E6%95%A3%E7%B4%A2%E5%BC%95%E4%BC%98%E5%8C%96SQL/1.png">
 
 
 
@@ -120,13 +122,13 @@
 
 
 
-  <link rel="canonical" href="https://gukie.github.io/2020/05/16/[Annotation] annotation定义的总结/"/>
+  <link rel="canonical" href="https://gukie.github.io/2020/07/18/使用松散索引优化SQL/"/>
 
 
 
 
 
-  <title>annotation定义的总结 | 远山一棵树</title>
+  <title>使用松散索引优化SQL | 远山一棵树</title>
   
 
 
@@ -301,7 +303,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://gukie.github.io/2020/05/16/%5BAnnotation%5D%20annotation%E5%AE%9A%E4%B9%89%E7%9A%84%E6%80%BB%E7%BB%93/">
+    <link itemprop="mainEntityOfPage" href="https://gukie.github.io/2020/07/18/%E4%BD%BF%E7%94%A8%E6%9D%BE%E6%95%A3%E7%B4%A2%E5%BC%95%E4%BC%98%E5%8C%96SQL/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="古树">
@@ -318,7 +320,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">annotation定义的总结</h1>
+          <h1 class="post-title" itemprop="name headline">使用松散索引优化SQL</h1>
         
 
         <div class="post-meta">
@@ -330,8 +332,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-05-16T11:12:25+08:00">
-                2020-05-16
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-07-18T23:34:05+08:00">
+                2020-07-18
               </time>
             
 
@@ -353,8 +355,8 @@
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/java/" itemprop="url" rel="index">
-                    <span itemprop="name">java</span>
+                  <a href="/categories/MySQL/" itemprop="url" rel="index">
+                    <span itemprop="name">MySQL</span>
                   </a>
                 </span>
 
@@ -364,8 +366,8 @@
                 
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/java/%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index">
-                    <span itemprop="name">基础</span>
+                  <a href="/categories/MySQL/SQL%E4%BC%98%E5%8C%96/" itemprop="url" rel="index">
+                    <span itemprop="name">SQL优化</span>
                   </a>
                 </span>
 
@@ -406,49 +408,58 @@
       
 
       
-        <h1 id="Annotation-annotation定义的总结"><a href="#Annotation-annotation定义的总结" class="headerlink" title="[Annotation] annotation定义的总结"></a>[Annotation] annotation定义的总结</h1><p><a name="tyC3q"></a></p>
+        <p><a name="rEULd"></a></p>
 <h3 id="refer"><a href="#refer" class="headerlink" title="refer"></a>refer</h3><ul>
-<li><a href="https://juejin.im/post/5c63e2b0f265da2dd94c8e16" target="_blank" rel="noopener">https://juejin.im/post/5c63e2b0f265da2dd94c8e16</a> （@Inherited 使用注意点）</li>
+<li><a href="https://dev.mysql.com/doc/refman/5.7/en/group-by-optimization.html" target="_blank" rel="noopener">https://dev.mysql.com/doc/refman/5.7/en/group-by-optimization.html</a> (松散索引的官方解释)</li>
+</ul>
+<p><a name="yjrHT"></a></p>
+<h3 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h3><p><br>对于物联网行业来说，当业务增长之后，其对应的数据增长的速度是非常快的，因为设备每时每刻都在产生数据，这样某些表上的数据已经悄悄的上了千万级别，这时候就急需对其做一定的优化。其中最常见的就是水平拆分了。拆分之前第一步要做的就是数据统计分析，而由于数据量级摆在这儿，所以在统计的时候SQL执行超时就很常见了，这时候就需要做优化<br><br><br><br><br>假设某个表记录的设备的上报记录，而且该表由于历史原因存储的不止一种业务数据，其的结构如下:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> <span class="string">`dev_history`</span> (</span><br><span class="line"><span class="string">`id`</span> <span class="built_in">bigint</span>(<span class="number">20</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> AUTO_INCREMENT,</span><br><span class="line"><span class="string">`dev_id`</span> <span class="built_in">varchar</span>(<span class="number">64</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">'设备id'</span>,</span><br><span class="line"><span class="string">`value`</span> <span class="built_in">varchar</span>(<span class="number">64</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">DEFAULT</span> <span class="string">''</span> <span class="keyword">COMMENT</span> <span class="string">'value'</span>,</span><br><span class="line"><span class="string">`status`</span> <span class="built_in">smallint</span>(<span class="number">1</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">'状态'</span>,</span><br><span class="line"><span class="string">`gmt_create`</span> <span class="built_in">bigint</span>(<span class="number">20</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span>,</span><br><span class="line"><span class="string">`gmt_modified`</span> <span class="built_in">bigint</span>(<span class="number">20</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span>,</span><br><span class="line">PRIMARY <span class="keyword">KEY</span> (<span class="string">`id`</span>),</span><br><span class="line"><span class="keyword">UNIQUE</span> <span class="keyword">KEY</span> <span class="string">`idx_devid`</span> (<span class="string">`dev_id`</span>,)</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+<p>现在希望将某个业务的数据统计出来，然后做拆分。统计分析的工作主要分两块:</p>
+<ul>
+<li>将每条设备有多少条记录找出来</li>
+<li>对每个设备进行分析，分析其是否是你期望的业务</li>
+</ul>
+<p>有了上面两个数据，就可以知道知道数据增长的趋势，从而对如何水平拆分提供参考.<br><br><br></p>
+<p><a name="FSoQK"></a></p>
+<h3 id="经过"><a href="#经过" class="headerlink" title="经过"></a>经过</h3><p>对于统计每个设备的有多少数量，一开始SQL写成如下这样</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> dev_id, <span class="keyword">count</span>(<span class="keyword">id</span>) <span class="keyword">as</span> <span class="keyword">count</span> <span class="keyword">from</span> dev_history <span class="keyword">group</span> <span class="keyword">by</span> dev_id;</span><br></pre></td></tr></table></figure>
+
+<p><br>从执行计划看，走的是索引。嗯，感觉还不错，应该会挺快的。然而由于设备的数量有几十万条，所以即使走索引也会很慢，而且在统计的时候不可能一次性将几十万的数据都捞出来，统计程序会直接进ICU的<br><img src="/2020/07/18/%E4%BD%BF%E7%94%A8%E6%9D%BE%E6%95%A3%E7%B4%A2%E5%BC%95%E4%BC%98%E5%8C%96SQL/1.png" alt="image.png"><br><br><br>那怎么办，只能limit了，改造之后的SQL如下</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> dev_id <span class="keyword">as</span> devId, <span class="keyword">count</span>(<span class="keyword">id</span>) <span class="keyword">as</span> <span class="keyword">count</span> <span class="keyword">from</span> dev_history <span class="keyword">group</span> <span class="keyword">by</span> dev_id <span class="keyword">order</span> <span class="keyword">by</span> dev_id <span class="keyword">limit</span> <span class="number">0</span>, <span class="number">5000</span></span><br></pre></td></tr></table></figure>
+<p>以上SQL跑起来之后还是很容易超时:</p>
+<ul>
+<li>limit的offset到后面的时候会很大，虽然走的是索引但是还是会遍历很多无用的数据. 对于这种问题，一般会想到的做范围限制，但是由于每个设备无时无刻都在生产数据，所以他们之间不存在先后顺序(即id和gmtCreate都不适用)，所以无法做范围限制. </li>
+<li>有个小问题是: 由于group by默认会对作用的字段做排序，所以这里就不需要做 order by了</li>
+</ul>
+<br>
+
+<p><a name="IgePG"></a></p>
+<h3 id="最终解决方案"><a href="#最终解决方案" class="headerlink" title="最终解决方案"></a>最终解决方案</h3><p>最后的解决方案是: 通过松散索引来解决。松散索引是跟紧凑索引相对的。</p>
+<ul>
+<li>紧凑索引，是走了索引，一般是查找范围查找或者是 全索引查找<blockquote>
+<p>A Tight Index Scan may be either a full index scan or a range index scan, depending on the query conditions. When the conditions for a Loose Index Scan are not met, it still may be possible to avoid creation of temporary tables for <code>GROUP BY</code> queries</p>
+</blockquote>
+</li>
+</ul>
+<ul>
+<li>所谓松散索引，是在做数据统计的时候不是遍历索引，而是会跳过相同的数据。而且一般在group by的时候会使用到。比如MySQL在group by作用的所有的字段都在索引上，那么它就会走松散索引。我们这里的例子就是 dev_id是有索引的<blockquote>
+<p>The most efficient way to process <code>GROUP BY</code> is when an index is used to directly retrieve the grouping columns. With this access method, MySQL uses the property of some index types that the keys are ordered (for example, <code>BTREE</code>). This property enables use of lookup groups in an index without having to consider all keys in the index that satisfy all <code>WHERE</code> conditions. This access method considers only a fraction of the keys in an index, so it is called a Loose Index Scan. When there is no <code>WHERE</code> clause, a Loose Index Scan reads as many keys as the number of groups, which may be a much smaller number than that of all keys. If the <code>WHERE</code> clause contains range predicates (see the discussion of the <a href="https://dev.mysql.com/doc/refman/5.7/en/explain-output.html#jointype_range" target="_blank" rel="noopener"><code>range</code></a> join type in <a href="https://dev.mysql.com/doc/refman/5.7/en/using-explain.html" target="_blank" rel="noopener">Section 8.8.1, “Optimizing Queries with EXPLAIN”</a>), a Loose Index Scan looks up the first key of each group that satisfies the range conditions, and again reads the smallest possible number of keys</p>
+</blockquote>
+</li>
 </ul>
 <br>
 <br>
+<br>所以可以对我们的SQL做一定的改造
 
+<ul>
+<li>第一步中只获取不重复的dev_id</li>
+<li>第二步，再通过dev_id去获取对应的count数据。因为每个dev_id的记录数据不会很大，最多几十万，并且它有索引所以查询起来还是比较快的</li>
+</ul>
+<p>这样以来，就可以减轻每一步的压力，还能获取到对应的数据。对于第一步，获取不重复的dev_id的SQL如下</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> dev_id <span class="keyword">from</span> dev_history  <span class="keyword">where</span> <span class="number">1</span>=<span class="number">1</span> <span class="keyword">group</span> <span class="keyword">by</span> dev_id;</span><br></pre></td></tr></table></figure>
 
-<table>
-<thead>
-<tr>
-<th><strong>元注解</strong></th>
-<th><strong>作用</strong></th>
-<th><strong>使用注意点</strong></th>
-</tr>
-</thead>
-<tbody><tr>
-<td>@Inherited</td>
-<td>是否可以继承. 即子类是否可以不用定义直接使用父类的注解</td>
-<td>使用@Inherited注意点<br>- @Inherited 并不会从接口中继承，而只会从class中继承<br>- 方法并不从它所重载的方法继承annotation<br></td>
-</tr>
-<tr>
-<td>@Retention</td>
-<td>表示在系统运行的哪个阶段出现</td>
-<td>RetentionPolicy.RUNTIME - 会被compiler记住并且会在JVM 运行时存留<br>RetentionPolicy.<em>CLASS - 会被compiler记住但是不会在JVM中存留</em></td>
-</tr>
-<tr>
-<td>@Documented</td>
-<td>是否在javadoc中出现</td>
-<td></td>
-</tr>
-<tr>
-<td>@Target</td>
-<td>定义的注解可以使用在那些地方</td>
-<td>具体可以查看 ElementType的定义<br>ElementType.<em>METHOD - 可以使用在方法上</em><br>ElementType.<em>TYPE - 可以使用在class/interface上</em></td>
-</tr>
-</tbody></table>
-<p><br>一个完整的例子</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Documented</span></span><br><span class="line"><span class="meta">@Inherited</span></span><br><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="meta">@Target</span>( &#123;ElementType.METHOD, ElementType.TYPE&#125;)</span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> TimeTraceLog &#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">long</span> <span class="title">value</span><span class="params">()</span> <span class="keyword">default</span> 200</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="function">Level <span class="title">level</span><span class="params">()</span> <span class="keyword">default</span> Level.WARN</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<br>
-<br>
-
+<p><br>对应的执行计划如下, 其中 “<strong>Using index for group-by</strong>“ 表示的就是当前SQL执行时使用的是松散索引<br><img src="/2020/07/18/%E4%BD%BF%E7%94%A8%E6%9D%BE%E6%95%A3%E7%B4%A2%E5%BC%95%E4%BC%98%E5%8C%96SQL/2.png" alt="image.png"><br><br><br><br><br></p>
 
       
     </div>
@@ -466,9 +477,7 @@
       
         <div class="post-tags">
           
-            <a href="/tags/java/" rel="tag"># java</a>
-          
-            <a href="/tags/annotation/" rel="tag"># annotation</a>
+            <a href="/tags/SQL%E4%BC%98%E5%8C%96/" rel="tag"># SQL优化</a>
           
         </div>
       
@@ -481,8 +490,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2020/05/07/Spring%E7%9A%84BeanFactory.getBeansOfType%E7%9A%84%E5%9D%91/" rel="next" title="Spring的BeanFactory.getBeansOfType的坑">
-                <i class="fa fa-chevron-left"></i> Spring的BeanFactory.getBeansOfType的坑
+              <a href="/2020/07/06/property-placeholder%E7%9A%84SpringBoot%E6%96%B9%E5%BC%8F%E5%AE%9E%E7%8E%B0/" rel="next" title="xml的 context:property-placeholder 的SpringBoot方式实现">
+                <i class="fa fa-chevron-left"></i> xml的 context:property-placeholder 的SpringBoot方式实现
               </a>
             
           </div>
@@ -490,10 +499,6 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2020/05/19/HTTPS%E8%AE%A4%E8%AF%81%E8%BF%87%E7%A8%8B/" rel="prev" title="HTTPS认证过程">
-                HTTPS认证过程 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -629,7 +634,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Annotation-annotation定义的总结"><span class="nav-number">1.</span> <span class="nav-text">[Annotation] annotation定义的总结</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#refer"><span class="nav-number">1.0.1.</span> <span class="nav-text">refer</span></a></li></ol></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#refer"><span class="nav-number">1.</span> <span class="nav-text">refer</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#背景"><span class="nav-number">2.</span> <span class="nav-text">背景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#经过"><span class="nav-number">3.</span> <span class="nav-text">经过</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#最终解决方案"><span class="nav-number">4.</span> <span class="nav-text">最终解决方案</span></a></li></ol></div>
             
 
           </div>
