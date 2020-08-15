@@ -152,6 +152,58 @@
       </tags>
   </entry>
   <entry>
+    <title>getResourceAsStream 在class和classloader的异同</title>
+    <url>/2020/06/01/getResourceAsStream%20%E5%9C%A8class%E5%92%8Cclassloader%E7%9A%84%E5%BC%82%E5%90%8C/</url>
+    <content><![CDATA[<p><a name="6kO5S"></a></p>
+<h3 id="Java中加载资源，有两种方式"><a href="#Java中加载资源，有两种方式" class="headerlink" title="Java中加载资源，有两种方式"></a>Java中加载资源，有两种方式</h3><ul>
+<li>通过classloader的getResourceAsStream</li>
+<li>通过class的getResourceAsStream</li>
+</ul>
+<br>
+<br>他们的相同点，都是去resources下找资源，不同点是class的getResourceAsStream在找资源之前会对参数"name"进行处理。以下为源码的简单分析<br>
+<br>
+
+<p><a name="C0wO2"></a></p>
+<h4 id="java-lang-ClassLoader-getResourceAsStream"><a href="#java-lang-ClassLoader-getResourceAsStream" class="headerlink" title="java.lang.ClassLoader#getResourceAsStream"></a>java.lang.ClassLoader#getResourceAsStream</h4><ul>
+<li>name传什么，就用该name去找，不会做而外的处理<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> InputStream <span class="title">getResourceAsStream</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">        URL url = getResource(name);</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> url != <span class="keyword">null</span> ? url.openStream() : <span class="keyword">null</span>;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+
+</li>
+</ul>
+<p><a name="tyQpQ"></a></p>
+<h4 id="java-lang-Class-getResourceAsStream"><a href="#java-lang-Class-getResourceAsStream" class="headerlink" title="java.lang.Class#getResourceAsStream"></a>java.lang.Class#getResourceAsStream</h4><p>会先对传入的name做一层处理:</p>
+<ul>
+<li>如果name是以”/“为开头，那么不做处理，即: 从resources下找</li>
+<li>如果name不是以”/“为开头，则会将 调用该方法的类的package加上去. 即会从resources下找”packageName”+”name”的资源. 比如”com.test.test-1.txt”</li>
+</ul>
+<p><img src="/2020/06/01/getResourceAsStream%20%E5%9C%A8class%E5%92%8Cclassloader%E7%9A%84%E5%BC%82%E5%90%8C/1.png" alt="image.png"></p>
+<ul>
+<li>之后通过classloader去找资源<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> InputStream <span class="title">getResourceAsStream</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">        name = resolveName(name);</span><br><span class="line">        ClassLoader cl = getClassLoader0();</span><br><span class="line">        <span class="keyword">if</span> (cl==<span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="comment">// A system class.</span></span><br><span class="line">            <span class="keyword">return</span> ClassLoader.getSystemResourceAsStream(name);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> cl.getResourceAsStream(name);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Add a package name prefix if the name is not absolute Remove leading "/"</span></span><br><span class="line"><span class="comment">     * if name is absolute</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">private</span> String <span class="title">resolveName</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (name == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> name;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (!name.startsWith(<span class="string">"/"</span>)) &#123;</span><br><span class="line">            Class&lt;?&gt; c = <span class="keyword">this</span>;</span><br><span class="line">            <span class="keyword">while</span> (c.isArray()) &#123;</span><br><span class="line">                c = c.getComponentType();</span><br><span class="line">            &#125;</span><br><span class="line">            String baseName = c.getName();</span><br><span class="line">            <span class="keyword">int</span> index = baseName.lastIndexOf(<span class="string">'.'</span>);</span><br><span class="line">            <span class="keyword">if</span> (index != -<span class="number">1</span>) &#123;</span><br><span class="line">                name = baseName.substring(<span class="number">0</span>, index).replace(<span class="string">'.'</span>, <span class="string">'/'</span>)</span><br><span class="line">                    +<span class="string">"/"</span>+name;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            name = name.substring(<span class="number">1</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> name;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+<br>
+<br>
+
+<p><a name="RvqPr"></a></p>
+<h3 id="一个例子"><a href="#一个例子" class="headerlink" title="一个例子"></a>一个例子</h3><p>在找不到资源的时候，可以查看下maven打出来的target中是否包含资源, 如果找得到，那就基本都能找到，否则就要看看pom.xml中是否在builder时候将对应的资源给exclude掉了(默认都是会将resources下的资源加载进来的)<br><img src="/2020/06/01/getResourceAsStream%20%E5%9C%A8class%E5%92%8Cclassloader%E7%9A%84%E5%BC%82%E5%90%8C/2.png" alt="image.png"></p>
+<p><a name="Oo89r"></a></p>
+<h4 id="在main下的示例"><a href="#在main下的示例" class="headerlink" title="在main下的示例"></a>在main下的示例</h4><p>源码如下</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Test</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        InputStream fis1 = Thread.currentThread().getContextClassLoader().getResourceAsStream(<span class="string">"hello.txt"</span>);</span><br><span class="line">        InputStream fis2 = Thread.currentThread().getContextClassLoader().getResourceAsStream(<span class="string">"cloud_cert-daily.pfx"</span>);</span><br><span class="line">        InputStream fis3 = Thread.currentThread().getContextClassLoader().getResourceAsStream(<span class="string">"cloud_root-daily.crt"</span>);</span><br><span class="line">        InputStream fis4 = Thread.currentThread().getContextClassLoader().getResourceAsStream(<span class="string">"test.txt"</span>);</span><br><span class="line">        System.out.println(<span class="keyword">false</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="/2020/06/01/getResourceAsStream%20%E5%9C%A8class%E5%92%8Cclassloader%E7%9A%84%E5%BC%82%E5%90%8C/3.png" alt="image.png"><br><a name="lLGB4"></a></p>
+<h4 id="在test下进行的示例"><a href="#在test下进行的示例" class="headerlink" title="在test下进行的示例"></a>在test下进行的示例</h4><p>源码如下:</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">One</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        InputStream fis1 = One.class.getClassLoader().getResourceAsStream("hello2.txt");</span><br><span class="line">        InputStream fis2 = One.class.getResourceAsStream("test-1.txt");</span><br><span class="line">        InputStream fis3 = Thread.currentThread().getContextClassLoader().getResourceAsStream(<span class="string">"cert/pro/root-daily2.crt"</span>);</span><br><span class="line">        InputStream fis4 = Thread.currentThread().getContextClassLoader().getResourceAsStream(<span class="string">"test2.txt"</span>);</span><br><span class="line">        InputStream fis5 = One.class.getResourceAsStream("/test3.txt");</span><br><span class="line">        InputStream fis6 = One.class.getResourceAsStream("/cert/pro/cert-daily1.pfx");</span><br><span class="line">        System.out.println(<span class="keyword">false</span>);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="/2020/06/01/getResourceAsStream%20%E5%9C%A8class%E5%92%8Cclassloader%E7%9A%84%E5%BC%82%E5%90%8C/4.png" alt="image.png"><br><br><br></p>
+]]></content>
+      <categories>
+        <category>java</category>
+        <category>基础</category>
+      </categories>
+      <tags>
+        <tag>java</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>xml的 context:property-placeholder 的SpringBoot方式实现</title>
     <url>/2020/07/06/property-placeholder%E7%9A%84SpringBoot%E6%96%B9%E5%BC%8F%E5%AE%9E%E7%8E%B0/</url>
     <content><![CDATA[<p><br>当我们从配置中心读取配置信息的时候，通常会将读取配置中心的代码封装成一个bean. 然后将该bean赋予给PropertyPlaceHolder. <br></p>
@@ -205,122 +257,6 @@
       <tags>
         <tag>spring</tag>
         <tag>springboot</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>使用松散索引优化SQL</title>
-    <url>/2020/07/18/%E4%BD%BF%E7%94%A8%E6%9D%BE%E6%95%A3%E7%B4%A2%E5%BC%95%E4%BC%98%E5%8C%96SQL/</url>
-    <content><![CDATA[<p><a name="rEULd"></a></p>
-<h3 id="refer"><a href="#refer" class="headerlink" title="refer"></a>refer</h3><ul>
-<li><a href="https://dev.mysql.com/doc/refman/5.7/en/group-by-optimization.html" target="_blank" rel="noopener">https://dev.mysql.com/doc/refman/5.7/en/group-by-optimization.html</a> (松散索引的官方解释)</li>
-</ul>
-<p><a name="yjrHT"></a></p>
-<h3 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h3><p><br>对于物联网行业来说，当业务增长之后，其对应的数据增长的速度是非常快的，因为设备每时每刻都在产生数据，这样某些表上的数据已经悄悄的上了千万级别，这时候就急需对其做一定的优化。其中最常见的就是水平拆分了。拆分之前第一步要做的就是数据统计分析，而由于数据量级摆在这儿，所以在统计的时候SQL执行超时就很常见了，这时候就需要做优化<br><br><br><br><br>假设某个表记录的设备的上报记录，而且该表由于历史原因存储的不止一种业务数据，其的结构如下:</p>
-<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> <span class="string">`dev_history`</span> (</span><br><span class="line"><span class="string">`id`</span> <span class="built_in">bigint</span>(<span class="number">20</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> AUTO_INCREMENT,</span><br><span class="line"><span class="string">`dev_id`</span> <span class="built_in">varchar</span>(<span class="number">64</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">'设备id'</span>,</span><br><span class="line"><span class="string">`value`</span> <span class="built_in">varchar</span>(<span class="number">64</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">DEFAULT</span> <span class="string">''</span> <span class="keyword">COMMENT</span> <span class="string">'value'</span>,</span><br><span class="line"><span class="string">`status`</span> <span class="built_in">smallint</span>(<span class="number">1</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">'状态'</span>,</span><br><span class="line"><span class="string">`gmt_create`</span> <span class="built_in">bigint</span>(<span class="number">20</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span>,</span><br><span class="line"><span class="string">`gmt_modified`</span> <span class="built_in">bigint</span>(<span class="number">20</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span>,</span><br><span class="line">PRIMARY <span class="keyword">KEY</span> (<span class="string">`id`</span>),</span><br><span class="line"><span class="keyword">UNIQUE</span> <span class="keyword">KEY</span> <span class="string">`idx_devid`</span> (<span class="string">`dev_id`</span>,)</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
-<p>现在希望将某个业务的数据统计出来，然后做拆分。统计分析的工作主要分两块:</p>
-<ul>
-<li>将每条设备有多少条记录找出来</li>
-<li>对每个设备进行分析，分析其是否是你期望的业务</li>
-</ul>
-<p>有了上面两个数据，就可以知道知道数据增长的趋势，从而对如何水平拆分提供参考.<br><br><br></p>
-<p><a name="FSoQK"></a></p>
-<h3 id="经过"><a href="#经过" class="headerlink" title="经过"></a>经过</h3><p>对于统计每个设备的有多少数量，一开始SQL写成如下这样</p>
-<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">select</span> dev_id, <span class="keyword">count</span>(<span class="keyword">id</span>) <span class="keyword">as</span> <span class="keyword">count</span> <span class="keyword">from</span> dev_history <span class="keyword">group</span> <span class="keyword">by</span> dev_id;</span><br></pre></td></tr></table></figure>
-
-<p><br>从执行计划看，走的是索引。嗯，感觉还不错，应该会挺快的。然而由于设备的数量有几十万条，所以即使走索引也会很慢，而且在统计的时候不可能一次性将几十万的数据都捞出来，统计程序会直接进ICU的<br><img src="/2020/07/18/%E4%BD%BF%E7%94%A8%E6%9D%BE%E6%95%A3%E7%B4%A2%E5%BC%95%E4%BC%98%E5%8C%96SQL/1.png" alt="image.png"><br><br><br>那怎么办，只能limit了，改造之后的SQL如下</p>
-<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">select</span> dev_id <span class="keyword">as</span> devId, <span class="keyword">count</span>(<span class="keyword">id</span>) <span class="keyword">as</span> <span class="keyword">count</span> <span class="keyword">from</span> dev_history <span class="keyword">group</span> <span class="keyword">by</span> dev_id <span class="keyword">order</span> <span class="keyword">by</span> dev_id <span class="keyword">limit</span> <span class="number">0</span>, <span class="number">5000</span></span><br></pre></td></tr></table></figure>
-<p>以上SQL跑起来之后还是很容易超时:</p>
-<ul>
-<li>limit的offset到后面的时候会很大，虽然走的是索引但是还是会遍历很多无用的数据. 对于这种问题，一般会想到的做范围限制，但是由于每个设备无时无刻都在生产数据，所以他们之间不存在先后顺序(即id和gmtCreate都不适用)，所以无法做范围限制. </li>
-<li>有个小问题是: 由于group by默认会对作用的字段做排序，所以这里就不需要做 order by了</li>
-</ul>
-<br>
-
-<p><a name="IgePG"></a></p>
-<h3 id="最终解决方案"><a href="#最终解决方案" class="headerlink" title="最终解决方案"></a>最终解决方案</h3><p>最后的解决方案是: 通过松散索引来解决。松散索引是跟紧凑索引相对的。</p>
-<ul>
-<li>紧凑索引，是走了索引，一般是查找范围查找或者是 全索引查找<blockquote>
-<p>A Tight Index Scan may be either a full index scan or a range index scan, depending on the query conditions. When the conditions for a Loose Index Scan are not met, it still may be possible to avoid creation of temporary tables for <code>GROUP BY</code> queries</p>
-</blockquote>
-</li>
-</ul>
-<ul>
-<li>所谓松散索引，是在做数据统计的时候不是遍历索引，而是会跳过相同的数据。而且一般在group by的时候会使用到。比如MySQL在group by作用的所有的字段都在索引上，那么它就会走松散索引。我们这里的例子就是 dev_id是有索引的<blockquote>
-<p>The most efficient way to process <code>GROUP BY</code> is when an index is used to directly retrieve the grouping columns. With this access method, MySQL uses the property of some index types that the keys are ordered (for example, <code>BTREE</code>). This property enables use of lookup groups in an index without having to consider all keys in the index that satisfy all <code>WHERE</code> conditions. This access method considers only a fraction of the keys in an index, so it is called a Loose Index Scan. When there is no <code>WHERE</code> clause, a Loose Index Scan reads as many keys as the number of groups, which may be a much smaller number than that of all keys. If the <code>WHERE</code> clause contains range predicates (see the discussion of the <a href="https://dev.mysql.com/doc/refman/5.7/en/explain-output.html#jointype_range" target="_blank" rel="noopener"><code>range</code></a> join type in <a href="https://dev.mysql.com/doc/refman/5.7/en/using-explain.html" target="_blank" rel="noopener">Section 8.8.1, “Optimizing Queries with EXPLAIN”</a>), a Loose Index Scan looks up the first key of each group that satisfies the range conditions, and again reads the smallest possible number of keys</p>
-</blockquote>
-</li>
-</ul>
-<br>
-<br>
-<br>所以可以对我们的SQL做一定的改造
-
-<ul>
-<li>第一步中只获取不重复的dev_id</li>
-<li>第二步，再通过dev_id去获取对应的count数据。因为每个dev_id的记录数据不会很大，最多几十万，并且它有索引所以查询起来还是比较快的</li>
-</ul>
-<p>这样以来，就可以减轻每一步的压力，还能获取到对应的数据。对于第一步，获取不重复的dev_id的SQL如下</p>
-<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">select</span> dev_id <span class="keyword">from</span> dev_history  <span class="keyword">where</span> <span class="number">1</span>=<span class="number">1</span> <span class="keyword">group</span> <span class="keyword">by</span> dev_id;</span><br></pre></td></tr></table></figure>
-
-<p><br>对应的执行计划如下, 其中 “<strong>Using index for group-by</strong>“ 表示的就是当前SQL执行时使用的是松散索引<br><img src="/2020/07/18/%E4%BD%BF%E7%94%A8%E6%9D%BE%E6%95%A3%E7%B4%A2%E5%BC%95%E4%BC%98%E5%8C%96SQL/2.png" alt="image.png"><br><br><br><br><br></p>
-]]></content>
-      <categories>
-        <category>MySQL</category>
-        <category>SQL优化</category>
-      </categories>
-      <tags>
-        <tag>SQL优化</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>getResourceAsStream 在class和classloader的异同</title>
-    <url>/2020/06/01/getResourceAsStream%20%E5%9C%A8class%E5%92%8Cclassloader%E7%9A%84%E5%BC%82%E5%90%8C/</url>
-    <content><![CDATA[<p><a name="6kO5S"></a></p>
-<h3 id="Java中加载资源，有两种方式"><a href="#Java中加载资源，有两种方式" class="headerlink" title="Java中加载资源，有两种方式"></a>Java中加载资源，有两种方式</h3><ul>
-<li>通过classloader的getResourceAsStream</li>
-<li>通过class的getResourceAsStream</li>
-</ul>
-<br>
-<br>他们的相同点，都是去resources下找资源，不同点是class的getResourceAsStream在找资源之前会对参数"name"进行处理。以下为源码的简单分析<br>
-<br>
-
-<p><a name="C0wO2"></a></p>
-<h4 id="java-lang-ClassLoader-getResourceAsStream"><a href="#java-lang-ClassLoader-getResourceAsStream" class="headerlink" title="java.lang.ClassLoader#getResourceAsStream"></a>java.lang.ClassLoader#getResourceAsStream</h4><ul>
-<li>name传什么，就用该name去找，不会做而外的处理<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> InputStream <span class="title">getResourceAsStream</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">        URL url = getResource(name);</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> url != <span class="keyword">null</span> ? url.openStream() : <span class="keyword">null</span>;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-
-
-</li>
-</ul>
-<p><a name="tyQpQ"></a></p>
-<h4 id="java-lang-Class-getResourceAsStream"><a href="#java-lang-Class-getResourceAsStream" class="headerlink" title="java.lang.Class#getResourceAsStream"></a>java.lang.Class#getResourceAsStream</h4><p>会先对传入的name做一层处理:</p>
-<ul>
-<li>如果name是以”/“为开头，那么不做处理，即: 从resources下找</li>
-<li>如果name不是以”/“为开头，则会将 调用该方法的类的package加上去. 即会从resources下找”packageName”+”name”的资源. 比如”com.test.test-1.txt”</li>
-</ul>
-<p><img src="/2020/06/01/getResourceAsStream%20%E5%9C%A8class%E5%92%8Cclassloader%E7%9A%84%E5%BC%82%E5%90%8C/1.png" alt="image.png"></p>
-<ul>
-<li>之后通过classloader去找资源<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> InputStream <span class="title">getResourceAsStream</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">        name = resolveName(name);</span><br><span class="line">        ClassLoader cl = getClassLoader0();</span><br><span class="line">        <span class="keyword">if</span> (cl==<span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="comment">// A system class.</span></span><br><span class="line">            <span class="keyword">return</span> ClassLoader.getSystemResourceAsStream(name);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> cl.getResourceAsStream(name);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Add a package name prefix if the name is not absolute Remove leading "/"</span></span><br><span class="line"><span class="comment">     * if name is absolute</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">private</span> String <span class="title">resolveName</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (name == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> name;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (!name.startsWith(<span class="string">"/"</span>)) &#123;</span><br><span class="line">            Class&lt;?&gt; c = <span class="keyword">this</span>;</span><br><span class="line">            <span class="keyword">while</span> (c.isArray()) &#123;</span><br><span class="line">                c = c.getComponentType();</span><br><span class="line">            &#125;</span><br><span class="line">            String baseName = c.getName();</span><br><span class="line">            <span class="keyword">int</span> index = baseName.lastIndexOf(<span class="string">'.'</span>);</span><br><span class="line">            <span class="keyword">if</span> (index != -<span class="number">1</span>) &#123;</span><br><span class="line">                name = baseName.substring(<span class="number">0</span>, index).replace(<span class="string">'.'</span>, <span class="string">'/'</span>)</span><br><span class="line">                    +<span class="string">"/"</span>+name;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            name = name.substring(<span class="number">1</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> name;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-
-</li>
-</ul>
-<br>
-<br>
-
-<p><a name="RvqPr"></a></p>
-<h3 id="一个例子"><a href="#一个例子" class="headerlink" title="一个例子"></a>一个例子</h3><p>在找不到资源的时候，可以查看下maven打出来的target中是否包含资源, 如果找得到，那就基本都能找到，否则就要看看pom.xml中是否在builder时候将对应的资源给exclude掉了(默认都是会将resources下的资源加载进来的)<br><img src="/2020/06/01/getResourceAsStream%20%E5%9C%A8class%E5%92%8Cclassloader%E7%9A%84%E5%BC%82%E5%90%8C/2.png" alt="image.png"></p>
-<p><a name="Oo89r"></a></p>
-<h4 id="在main下的示例"><a href="#在main下的示例" class="headerlink" title="在main下的示例"></a>在main下的示例</h4><p>源码如下</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Test</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        InputStream fis1 = Thread.currentThread().getContextClassLoader().getResourceAsStream(<span class="string">"hello.txt"</span>);</span><br><span class="line">        InputStream fis2 = Thread.currentThread().getContextClassLoader().getResourceAsStream(<span class="string">"cloud_cert-daily.pfx"</span>);</span><br><span class="line">        InputStream fis3 = Thread.currentThread().getContextClassLoader().getResourceAsStream(<span class="string">"cloud_root-daily.crt"</span>);</span><br><span class="line">        InputStream fis4 = Thread.currentThread().getContextClassLoader().getResourceAsStream(<span class="string">"test.txt"</span>);</span><br><span class="line">        System.out.println(<span class="keyword">false</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p><img src="/2020/06/01/getResourceAsStream%20%E5%9C%A8class%E5%92%8Cclassloader%E7%9A%84%E5%BC%82%E5%90%8C/3.png" alt="image.png"><br><a name="lLGB4"></a></p>
-<h4 id="在test下进行的示例"><a href="#在test下进行的示例" class="headerlink" title="在test下进行的示例"></a>在test下进行的示例</h4><p>源码如下:</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">One</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        InputStream fis1 = One.class.getClassLoader().getResourceAsStream("hello2.txt");</span><br><span class="line">        InputStream fis2 = One.class.getResourceAsStream("test-1.txt");</span><br><span class="line">        InputStream fis3 = Thread.currentThread().getContextClassLoader().getResourceAsStream(<span class="string">"cert/pro/root-daily2.crt"</span>);</span><br><span class="line">        InputStream fis4 = Thread.currentThread().getContextClassLoader().getResourceAsStream(<span class="string">"test2.txt"</span>);</span><br><span class="line">        InputStream fis5 = One.class.getResourceAsStream("/test3.txt");</span><br><span class="line">        InputStream fis6 = One.class.getResourceAsStream("/cert/pro/cert-daily1.pfx");</span><br><span class="line">        System.out.println(<span class="keyword">false</span>);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p><img src="/2020/06/01/getResourceAsStream%20%E5%9C%A8class%E5%92%8Cclassloader%E7%9A%84%E5%BC%82%E5%90%8C/4.png" alt="image.png"><br><br><br></p>
-]]></content>
-      <categories>
-        <category>java</category>
-        <category>基础</category>
-      </categories>
-      <tags>
-        <tag>java</tag>
       </tags>
   </entry>
   <entry>
@@ -518,6 +454,70 @@
       <tags>
         <tag>java</tag>
         <tag>spring</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>使用松散索引优化SQL</title>
+    <url>/2020/07/18/%E4%BD%BF%E7%94%A8%E6%9D%BE%E6%95%A3%E7%B4%A2%E5%BC%95%E4%BC%98%E5%8C%96SQL/</url>
+    <content><![CDATA[<p><a name="rEULd"></a></p>
+<h3 id="refer"><a href="#refer" class="headerlink" title="refer"></a>refer</h3><ul>
+<li><a href="https://dev.mysql.com/doc/refman/5.7/en/group-by-optimization.html" target="_blank" rel="noopener">https://dev.mysql.com/doc/refman/5.7/en/group-by-optimization.html</a> (松散索引的官方解释)</li>
+</ul>
+<p><a name="yjrHT"></a></p>
+<h3 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h3><p><br>对于物联网行业来说，当业务增长之后，其对应的数据增长的速度是非常快的，因为设备每时每刻都在产生数据，这样某些表上的数据已经悄悄的上了千万级别，这时候就急需对其做一定的优化。其中最常见的就是水平拆分了。拆分之前第一步要做的就是数据统计分析，而由于数据量级摆在这儿，所以在统计的时候SQL执行超时就很常见了，这时候就需要做优化<br><br><br><br><br>假设某个表记录的设备的上报记录，而且该表由于历史原因存储的不止一种业务数据，其的结构如下:</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> <span class="string">`dev_history`</span> (</span><br><span class="line"><span class="string">`id`</span> <span class="built_in">bigint</span>(<span class="number">20</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> AUTO_INCREMENT,</span><br><span class="line"><span class="string">`dev_id`</span> <span class="built_in">varchar</span>(<span class="number">64</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">'设备id'</span>,</span><br><span class="line"><span class="string">`value`</span> <span class="built_in">varchar</span>(<span class="number">64</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">DEFAULT</span> <span class="string">''</span> <span class="keyword">COMMENT</span> <span class="string">'value'</span>,</span><br><span class="line"><span class="string">`status`</span> <span class="built_in">smallint</span>(<span class="number">1</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">'状态'</span>,</span><br><span class="line"><span class="string">`gmt_create`</span> <span class="built_in">bigint</span>(<span class="number">20</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span>,</span><br><span class="line"><span class="string">`gmt_modified`</span> <span class="built_in">bigint</span>(<span class="number">20</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span>,</span><br><span class="line">PRIMARY <span class="keyword">KEY</span> (<span class="string">`id`</span>),</span><br><span class="line"><span class="keyword">UNIQUE</span> <span class="keyword">KEY</span> <span class="string">`idx_devid`</span> (<span class="string">`dev_id`</span>,)</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+<p>现在希望将某个业务的数据统计出来，然后做拆分。统计分析的工作主要分两块:</p>
+<ul>
+<li>将每条设备有多少条记录找出来</li>
+<li>对每个设备进行分析，分析其是否是你期望的业务</li>
+</ul>
+<p>有了上面两个数据，就可以知道知道数据增长的趋势，从而对如何水平拆分提供参考.<br><br><br></p>
+<p><a name="FSoQK"></a></p>
+<h3 id="经过"><a href="#经过" class="headerlink" title="经过"></a>经过</h3><p>对于统计每个设备的有多少数量，一开始SQL写成如下这样</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">select</span> dev_id, <span class="keyword">count</span>(<span class="keyword">id</span>) <span class="keyword">as</span> <span class="keyword">count</span> <span class="keyword">from</span> dev_history <span class="keyword">group</span> <span class="keyword">by</span> dev_id;</span><br></pre></td></tr></table></figure>
+
+<p><br>从执行计划看，走的是索引。嗯，感觉还不错，应该会挺快的。然而由于设备的数量有几十万条，所以即使走索引也会很慢，而且在统计的时候不可能一次性将几十万的数据都捞出来，统计程序会直接进ICU的<br><img src="/2020/07/18/%E4%BD%BF%E7%94%A8%E6%9D%BE%E6%95%A3%E7%B4%A2%E5%BC%95%E4%BC%98%E5%8C%96SQL/1.png" alt="image.png"><br><br><br>那怎么办，只能limit了，改造之后的SQL如下</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">select</span> dev_id <span class="keyword">as</span> devId, <span class="keyword">count</span>(<span class="keyword">id</span>) <span class="keyword">as</span> <span class="keyword">count</span> <span class="keyword">from</span> dev_history <span class="keyword">group</span> <span class="keyword">by</span> dev_id <span class="keyword">order</span> <span class="keyword">by</span> dev_id <span class="keyword">limit</span> <span class="number">0</span>, <span class="number">5000</span></span><br></pre></td></tr></table></figure>
+<p>以上SQL跑起来之后还是很容易超时:</p>
+<ul>
+<li>limit的offset到后面的时候会很大，虽然走的是索引但是还是会遍历很多无用的数据. 对于这种问题，一般会想到的做范围限制，但是由于每个设备无时无刻都在生产数据，所以他们之间不存在先后顺序(即id和gmtCreate都不适用)，所以无法做范围限制. </li>
+<li>有个小问题是: 由于group by默认会对作用的字段做排序，所以这里就不需要做 order by了</li>
+</ul>
+<br>
+
+<p><a name="IgePG"></a></p>
+<h3 id="最终解决方案"><a href="#最终解决方案" class="headerlink" title="最终解决方案"></a>最终解决方案</h3><p>最后的解决方案是: 通过松散索引来解决。松散索引是跟紧凑索引相对的。</p>
+<ul>
+<li>紧凑索引，是走了索引，一般是查找范围查找或者是 全索引查找<blockquote>
+<p>A Tight Index Scan may be either a full index scan or a range index scan, depending on the query conditions. When the conditions for a Loose Index Scan are not met, it still may be possible to avoid creation of temporary tables for <code>GROUP BY</code> queries</p>
+</blockquote>
+</li>
+</ul>
+<ul>
+<li>所谓松散索引，是在做数据统计的时候不是遍历索引，而是会跳过相同的数据。而且一般在group by的时候会使用到。比如MySQL在group by作用的所有的字段都在索引上，那么它就会走松散索引。我们这里的例子就是 dev_id是有索引的<blockquote>
+<p>The most efficient way to process <code>GROUP BY</code> is when an index is used to directly retrieve the grouping columns. With this access method, MySQL uses the property of some index types that the keys are ordered (for example, <code>BTREE</code>). This property enables use of lookup groups in an index without having to consider all keys in the index that satisfy all <code>WHERE</code> conditions. This access method considers only a fraction of the keys in an index, so it is called a Loose Index Scan. When there is no <code>WHERE</code> clause, a Loose Index Scan reads as many keys as the number of groups, which may be a much smaller number than that of all keys. If the <code>WHERE</code> clause contains range predicates (see the discussion of the <a href="https://dev.mysql.com/doc/refman/5.7/en/explain-output.html#jointype_range" target="_blank" rel="noopener"><code>range</code></a> join type in <a href="https://dev.mysql.com/doc/refman/5.7/en/using-explain.html" target="_blank" rel="noopener">Section 8.8.1, “Optimizing Queries with EXPLAIN”</a>), a Loose Index Scan looks up the first key of each group that satisfies the range conditions, and again reads the smallest possible number of keys</p>
+</blockquote>
+</li>
+</ul>
+<br>
+<br>
+<br>所以可以对我们的SQL做一定的改造
+
+<ul>
+<li>第一步中只获取不重复的dev_id</li>
+<li>第二步，再通过dev_id去获取对应的count数据。因为每个dev_id的记录数据不会很大，最多几十万，并且它有索引所以查询起来还是比较快的</li>
+</ul>
+<p>这样以来，就可以减轻每一步的压力，还能获取到对应的数据。对于第一步，获取不重复的dev_id的SQL如下</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">select</span> dev_id <span class="keyword">from</span> dev_history  <span class="keyword">where</span> <span class="number">1</span>=<span class="number">1</span> <span class="keyword">group</span> <span class="keyword">by</span> dev_id;</span><br></pre></td></tr></table></figure>
+
+<p><br>对应的执行计划如下, 其中 “<strong>Using index for group-by</strong>“ 表示的就是当前SQL执行时使用的是松散索引<br><img src="/2020/07/18/%E4%BD%BF%E7%94%A8%E6%9D%BE%E6%95%A3%E7%B4%A2%E5%BC%95%E4%BC%98%E5%8C%96SQL/2.png" alt="image.png"><br><br><br><br><br></p>
+]]></content>
+      <categories>
+        <category>MySQL</category>
+        <category>SQL优化</category>
+      </categories>
+      <tags>
+        <tag>SQL优化</tag>
       </tags>
   </entry>
   <entry>
@@ -927,6 +927,499 @@
       </categories>
       <tags>
         <tag>maven</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>《kafka权威指南》- 读书笔记</title>
+    <url>/2020/08/15/%E3%80%8Akafka%E6%9D%83%E5%A8%81%E6%8C%87%E5%8D%97%E3%80%8B%E7%AC%94%E8%AE%B0/</url>
+    <content><![CDATA[<p><a name="ZazXK"></a></p>
+<h2 id="chapter-2-安装"><a href="#chapter-2-安装" class="headerlink" title="chapter 2-安装"></a>chapter 2-安装</h2><p><a name="nbCIi"></a></p>
+<h3 id="1-zookeeper"><a href="#1-zookeeper" class="headerlink" title="1. zookeeper"></a>1. zookeeper</h3><ul>
+<li>zk的作用: 存储消费者信息+topic信息+kafka集群的信息</li>
+<li>zk集群会有选举，所以节点数量最好是奇数以免形成脑裂. 但一个zk集群不建议包含超过7个节点，因为节点过多时在进行集群一致性统一时，会消耗过多资源造成整体集群的性能下降</li>
+<li>zk的几个端口<ul>
+<li>clientPort: 客户端连接到zk集群所用的端口，默认是2181</li>
+<li>peerPort: 节点与节点之间平时进行数据通信时所用的TCP端口</li>
+<li>leaderPort: 用于集群选举时通信用的TCP端口</li>
+</ul>
+</li>
+</ul>
+<br>
+
+<p><a name="zaS5H"></a></p>
+<h3 id="2-kafka-broker配置"><a href="#2-kafka-broker配置" class="headerlink" title="2. kafka broker配置"></a>2. kafka broker配置</h3><ul>
+<li>port: kafka服务端开放给客户端连接的端口, 默认是9092</li>
+<li>brokder.id:当前broker在kafka集群中的唯一编号</li>
+<li>zookeeper.connect: zk的地址，这里的zk就是上面说的用于存储kafka集群信息+topic信息+消费者信息的</li>
+<li>log.dirs: 存放数据的目录。 kafka的消息都存放在这些目录中，该参数是一组以逗号隔开的文件系统路径。当有多个文件系统路径时，Kafka存放消息的时候会往最空闲(存的数据最少)的目录上放</li>
+<li>num.recovery.threads.per.data.dir: broker服务器启动/关闭时，每个log.dir 会有多少个线程去处理里面的数据</li>
+<li>auto.create.topics.enabe: 当topic不存在的时候是否会默认生成？ 该配置默认是true</li>
+</ul>
+<p><a name="VUATP"></a></p>
+<h3 id="3-kafka-topic的配置"><a href="#3-kafka-topic的配置" class="headerlink" title="3. kafka topic的配置"></a>3. kafka topic的配置</h3><ul>
+<li>num.partitions</li>
+<li>消息存留策略<ul>
+<li>log.retention.ms</li>
+<li>log.retention.bytes</li>
+</ul>
+</li>
+<li>日志片段关闭的策略: 当一个日志片段关闭之后，新的日志片段才会生成<ul>
+<li>log.segment.bytes. 关闭某个segment的最小bytes，当一个topic一天只能收到1M的数据，而该参数设置的值是10M，那么需要10天才能达到阀值。这10天内该segment是不会过期的. 如果log.rention.ms的值是7天，那么一个segment的生命周期就是10+7=17天</li>
+<li>log.segment.ms: 关闭某个segment的最小ms数</li>
+</ul>
+</li>
+<li>message.max.bytes: 单个消息的最大byte数. 默认是1M<ul>
+<li>该值指的是压缩后消息大小</li>
+<li>如果生产者发送超过该大小的消息，broker不会处理该消息，同时会返回错误信息</li>
+</ul>
+</li>
+</ul>
+<br>
+
+<p><a name="W28mb"></a></p>
+<h3 id="4-硬件选择的影响"><a href="#4-硬件选择的影响" class="headerlink" title="4. 硬件选择的影响"></a>4. 硬件选择的影响</h3><ul>
+<li>对生产者的影响<ul>
+<li>磁盘的吞吐量. 吞吐量越大，数据写入速度就越快，生产者生产消息的时候的延时就越低</li>
+<li>磁盘容量。越大就能存越多的数据</li>
+</ul>
+</li>
+<li>对消费者的影响<ul>
+<li>内存: 当读取消息的时候，会将消息读取到broker的内存中，所以内存会影响消费者的读取速度. 一般建议不要跟其他应用公用一个内存，即最好kafa服务器中没有其他的应用程序在一起跑</li>
+</ul>
+</li>
+<li>对生产者/消费者都有影响<ul>
+<li>网络: 如果集群的网络带宽被沾满，那么写入数据/读取数据都会收到影响，同时集群内的数据复制也会占用带宽，这样就会造成性能很差的表象</li>
+<li>CPU: 消息的传递需要压缩/解压缩，所以会消耗较多的CPU。 但是CPU对kafka的影响还是比较小的</li>
+</ul>
+</li>
+</ul>
+<br>
+
+<p><a name="JEcX4"></a></p>
+<h3 id="5-其他"><a href="#5-其他" class="headerlink" title="5. 其他"></a>5. 其他</h3><ul>
+<li>集群中broker的配置<ul>
+<li>大家指向的zk地址是同一个，这样才能通过zk来统一管理</li>
+<li>broker.id在集群内是唯一的。如果有两个broker.id是一样的，那么会有一个无法启动</li>
+</ul>
+</li>
+<li>数据中心布局<ul>
+<li>kafka集群虽然会有备份的说法，但是如果备份的数据跟主数据在同一个机房上，一旦机房出现故障，数据就会丢失，起不到备份的作用。所以最好是不同的机房+不同的机架进行数据备份</li>
+</ul>
+</li>
+<li>对于zookeeper<ul>
+<li>存储kafak集群信息+消费者元数据+topic数据</li>
+<li>在kafka 0.9.0.0之后，消费者元数据信息已经放到了broker中. 这样就减少了zk的压力</li>
+<li>最好zk集群不要跟其他应用程序一起使用，以免相互污染</li>
+</ul>
+</li>
+</ul>
+<br>
+
+<p><a name="6UHdR"></a></p>
+<h2 id="kafka-producer"><a href="#kafka-producer" class="headerlink" title="kafka producer"></a>kafka producer</h2><p>kafka producer包含以下几个信息</p>
+<ul>
+<li>topic</li>
+<li>partition</li>
+<li>key</li>
+<li>value</li>
+</ul>
+<p><br>在发送一个消息的时候，producer会对消息进行</p>
+<ul>
+<li>通过key进行分区计算，得出当前消息应该去哪个区。这就是分区器</li>
+<li>对key/value进行序列化，这就是序列化器。当然在consumer拿到数据的时候会进行反序列化</li>
+<li>以上两个都可以自定义</li>
+</ul>
+<br>
+<br>在创建一个producer的时候，我们需要指定
+
+<ul>
+<li>bootstrap.servers: broker集群中的某几个broker的地址清单，以 host:port 形式给出。需要注意的是不一定需要将所有的broker地址都列出来，只要给出一两个即可。producer可以通过其中一个找到其他的broker。但是清单中的最好大于等于2个，以免一个broker挂了可以通过另一个去找到broker集群</li>
+<li>key.serializer</li>
+<li>value.serializer</li>
+</ul>
+<br>
+<br>producer的一些配置
+
+<ul>
+<li>acks: 有多少个broker回应了成功，这一次写数据才算成功？ 0表示不用broker恢复，扔完消息就不管了; 1表示只要有一个就可以，这里的1个一般都是leader broker; 当需要所有broker都回复了，可将该值设置为all，这也是最安全的方式，但是也是最耗时的</li>
+<li>compression.type: 对消息的压缩。默认是没有的</li>
+<li>retries: 失败重试的次数。有时候失败是由于broker集群刚好在换届选举，此时重试下成功的概率将很大。kafka默认是会重试的</li>
+<li>缓冲相关的配置<ul>
+<li>buffer.memory: 当往服务器发送消息，被堵住时，producer所在机器最多可以缓冲多少接下来想要发送的消息而不报错.</li>
+<li>batch.size： 一个批次的数据大小, 到了这个值就会出发一次网络IO。但需要注意的是并不是每次都要达到该值才会触发网络传输，有时候达到一半就会触发，这跟linger.ms有关。kafka producer并不会每来一个消息就发送，而是会等到有一定量的时候才一次将消息发送到brokder，这样可以减少网络传输，最大化效率</li>
+<li>linger.ms: 发送批次之前，等待多长时间</li>
+<li>max.block.ms: 当producer的发送缓冲区已经满了，即buffer.memory已经达到了设置的值，或者获取不到元数据信息了(存储的时候存储不下了)，此时会等待max.block.ms时间，当时间到了就抛异常</li>
+</ul>
+</li>
+<li>通信相关<ul>
+<li>max.request.size: 一次请求所包含的最大的消息的大小. 该消息可以是一个消息，也可以是由多个消息组成。比如该值为1M，那么可以一次请求可以传输一个1M的消息，也可以传输10个1KB的消息</li>
+<li>max.in.flight.request.per.connection: producer发送消息之后在收到服务器回应之前可以发送多少个消息。值越大占用producer所在机器的内存越大，当然吞吐量也越大。当该值为1时，能保证消息的顺序</li>
+</ul>
+</li>
+</ul>
+<br>
+<br>关于分区
+
+<ul>
+<li>如果消息的key为null，那么将会使用默认的分区器，此时会采用round robin(轮询)的方式，随机将消息投递到某个分区</li>
+<li>如果消息的key不为null，并且没有指定分区器，则也会使用默认的分区器，此时<ul>
+<li>对key进行hash云端，得到一个值</li>
+<li>然后将这个值映射到broker集群下的某个分区。这里需要注意的是<ul>
+<li>只要集群没有新增分区，那么该key会被一直分配到同一个broker；但当分区新增了，那就会投到别的分区了</li>
+<li>会将集群下的所有分区都拿过来进行映射，无论该分区是否可用。如果选中的那个分区不可用，那么会报错。这也解释了为什么是增加分区，而不是说加少分区会对映射结果有影响</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<br>
+<br>
+
+<p><a name="sa4Cv"></a></p>
+<h2 id="chapter-4-consumer"><a href="#chapter-4-consumer" class="headerlink" title="chapter 4 - consumer"></a>chapter 4 - consumer</h2><p><br>一个topic的消费者群组中的consumer个数需要比该topic内的分区数少，否则会出现某些consumer没有partition可处理，造成资源闲置<br><br><br>消费者获取数据，是通过主动拉取的方式获取的，调用的是 consumer.poll方法. 在调用该方法时，会做好多事情，包括</p>
+<ul>
+<li>将自己加入到 consumer group中</li>
+<li>给群组协调器的broker发送心跳，告诉它我还活着</li>
+<li>提交上一次的处理完的消息的偏移量 (在自动提交的时候)</li>
+</ul>
+<br>
+
+<p><a name="URXV7"></a></p>
+<h3 id="1-再分配"><a href="#1-再分配" class="headerlink" title="1. 再分配"></a>1. 再分配</h3><ul>
+<li>当群组中有新的consumer加进来或者有consumer死去，那么consumer group就会对分区做再分配的动作, 即topic的分区所有权可能会从consumer1转移到其他consumer上</li>
+<li>实现过程:<ul>
+<li>第一个加入群组的consumer会成为群主</li>
+<li>群主会从 协调器broker中获取当前群主的所有 consumer信息</li>
+<li>然后群主根据一定的策略，给每个consumer分配它需要处理的partition。策略目前有两个<ul>
+<li>range: 该策略可能会出现某个consumer明显多，某个consumer明显少的情况</li>
+<li>roundRobin: 轮询分配，该分配策略分配的比较平均</li>
+</ul>
+</li>
+<li>最后群主会将分配情况提交给 协调器broker; 然后协调器broker会给每个consumer发送它自己分配到的partition。这样，只有群主知道其他consumer的partition分配情况；而其他的consumer只知道自己分配到的partition情况，看不到其他人的</li>
+</ul>
+</li>
+<li>再分配期间，整个群组将不可用，即不能消费消息</li>
+</ul>
+<br>
+<br>在实践中，推荐一个consumer一个线程，不要一个线程里有多个consumer；这样做到互不相干，不会互相影响。<br>
+<br>
+
+<p><a name="SrmEB"></a></p>
+<h3 id="2-消费者的一些参数配置"><a href="#2-消费者的一些参数配置" class="headerlink" title="2. 消费者的一些参数配置"></a>2. 消费者的一些参数配置</h3><ul>
+<li>一次能获取到的数据<ul>
+<li>max.partition.fetch.bytes ： 代表consumer一次能从每个partition中获取到的消息的最大字节数。该值不能小于topic配置中的 max.message.size. 否则会造成消费者获取不到数据，从而一直在重试</li>
+<li>fetch.min.bytes: 一次拿到的数据的最小字节数。少于该值将会等待，这有助于减少网络IO次数</li>
+<li>fetch.max.wait.ms： 该参数表示在拿不到fetch.min.bytes数量的字节数的情况下，等待多久就返回。</li>
+</ul>
+</li>
+<li>偏移量相关<ul>
+<li>auto.offset.reset: 消费者在读取一个没有偏移量的分区或者该偏移量无效的时候应该怎么办？<ul>
+<li>默认值是latest，表示从最新的记录开始读取；</li>
+<li>还有一个值是earliest，表示从起始位置开始读取数据</li>
+</ul>
+</li>
+<li>enable.auto.commit: 是否自动提交偏移量。默认是true. 并且默认的间隔时间是5s.</li>
+</ul>
+</li>
+</ul>
+<br>
+
+<p><a name="xSkTX"></a></p>
+<h3 id="3-偏移量-amp-提交"><a href="#3-偏移量-amp-提交" class="headerlink" title="3. 偏移量&amp;提交"></a>3. 偏移量&amp;提交</h3><ul>
+<li>实现机制: 偏移量的提交，是消费者往一个叫做 “_consumer_offset”的特殊topic发送消息，记录自己消费的偏移量信息。</li>
+<li>提交方式<ul>
+<li>自动提交: 使用kafka默认的机制提交。但这个策略容易造成消息的重复消费，因为两次提交之间的间隔内可能发生再均衡了</li>
+<li>手动提交，能更精确的控制<ul>
+<li>同步提交: 比较安全，但是会堵塞住处理线程，降低吞吐量</li>
+<li>异步提交: 能快速提交，并且借助回调函数能知道成功与否. 但会出现时间上是前面提交的偏移量，但是却是更后面达到，从而会有覆盖的现象. 比如11:30提交了2000的偏移量，但是发生了短暂的通信问题，导致服务器收不到；与此同时我们处理了另外一批数据，并成功提交了偏移量3000。如果我们进行重试，那么偏移量为2000的可能会覆盖偏移量3000</li>
+<li>同步+异步提交: 处理的时候通过异步方式实现，这样快速；一旦出现异常时(比如网络不稳定)，则使用同步做补偿，由于同步会一直重试直至成功或者发生无法恢复的错误才会停止，所以同步能确保最后处理的偏移量能提交成功</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>其他<ul>
+<li>我们可以监听 再均衡事件，对其进行处理. 方式是: 在consumer.subscribe(topic, listener)</li>
+<li>我们也可以通过 seek的方式，从我们想要的偏移量位置上开始处理数据。这在数据丢失或者重复的时候，比较有用</li>
+<li>在程序关闭的时候，可以通过在ShutdownHook调用 consumer.wakeup方法让 consumer.poll 抛出异常，然后在finally中调用consumer.close对 消费者占用的资源做清理</li>
+</ul>
+</li>
+</ul>
+<br>
+
+<p><a name="8RBdk"></a></p>
+<h2 id="chapter-5-深入Kafka"><a href="#chapter-5-深入Kafka" class="headerlink" title="chapter 5 - 深入Kafka"></a>chapter 5 - 深入Kafka</h2><p><a name="SZLjE"></a></p>
+<h3 id="broker集群"><a href="#broker集群" class="headerlink" title="broker集群"></a>broker集群</h3><p><a name="R6OV9"></a></p>
+<h4 id="1-集群成员关系"><a href="#1-集群成员关系" class="headerlink" title="1.集群成员关系"></a>1.集群成员关系</h4><p>一个独立运行的kafka服务器，被称为broker。多个broker配置的zk信息是同一个，那么它们就会形成一个kafka集群</p>
+<ul>
+<li>每个broker注册到集群的时候，都是以一个zk临时节点的形式出现的，它们会被挂载到目录<code>brokers/ids</code>下面</li>
+<li>每个broker都会有一个id. 如果它的id已经有其他bro ke r在用了，那么它会启动失败</li>
+<li>当一个broker失联了，那么它对应的zk临时节点会被移除</li>
+</ul>
+<p><a name="CEU5r"></a></p>
+<h4 id="2-控制器broker"><a href="#2-控制器broker" class="headerlink" title="2.控制器broker"></a>2.控制器broker</h4><p>一个topic会有多个分区，每个分区会落到一个broker上. 同时每个分区又会有多个副本，以做灾备之用. 所以这时候对于每个分区而言，就需要选举一个leader分区来，这样该分区的副本分区就会从leader分区复制数据。这个leader分区的选举工作是由一个叫做 控制器(controller)的broker来负责的。<br><br><br>控制器broker具有以下特点</p>
+<ul>
+<li>控制器broker本质上也是一个broker，所以它具有普通broker的功能. </li>
+<li>控制器broker还负责分区的选举工作，这是它特有的功能</li>
+</ul>
+<p><br>控制器broker选举过程: </p>
+<ul>
+<li>集群中的每个broker在启动的时候，都会去zk上注册一个名叫 <code>/controller</code>的节点，以让自己成为控制器broker</li>
+<li>当发现该节点已经存在的时候，就知道控制器broker已经名花有主了. 当前的broker就会去watch 该节点，这样就可以收到该节点的变更信息. </li>
+<li>每个controller都有自己的任期(也叫纪元)，该值通过epoch来表示</li>
+<li>当控制器broker挂了的时候，其他节点会收到通知，然后就会尝试去争当controller. 当一个新的节点成为了controller之后，它的epoch会比之前的大；</li>
+<li>通过epoch，即使前任controller重新连接到集群里来，也无法成为controller了，因为那些普通broker知道自己的controller当前的epoch是多少，当收到小于该epoch的消息，它们会忽略</li>
+</ul>
+<br>
+
+<p><a name="HxLmq"></a></p>
+<h4 id="3-复制"><a href="#3-复制" class="headerlink" title="3. 复制"></a>3. 复制</h4><p>复制就是副本分区从leader分区copy数据的过程. 这个过程是顺序执行的，即副本分区在请求消息5的时候，它肯定已经完成了消息1/消息2/消息3/消息4的复制<br><br><br>跟leader分区的数据保持一致的分区，被称作同步副本。在首领失踪时，这些副本是有可能被选为新首领的，因为它们拥有的消息是最新的。<br>在选举谁是leader分区时，有一个首选首领的概念。 首选首领，是在分区创建的时候被选中的首领，也就是初代首领。当在某轮选举之后，首领不是首选首领，并且此时首选首领是同步副本，那么会触发选举，让首选首领成为首领。这么做的原因是，首领的负载是比较高的，一般初代首领能承受该压力(一般来说它的配置会好一些)，这样集群内的负载能达到均衡，不至于使负载能力不够高的broker负重过高，造成整体集群的不稳定。<br><br><br><br><br></p>
+<p><a name="JzHEs"></a></p>
+<h3 id="请求处理"><a href="#请求处理" class="headerlink" title="请求处理"></a>请求处理</h3><p>kafka的所有消息，都是标准的，都会包含:</p>
+<ul>
+<li>request type - 请求类型</li>
+<li>request version - 请求的版本，这在客户端版本不一致时有用. </li>
+<li>correlation id - 请求消息的唯一标识，在问题诊断时用处较大</li>
+<li>client id - 用于表示请求的客户端</li>
+</ul>
+<br>
+<br>
+
+<p><a name="si0iv"></a></p>
+<h4 id="1-请求的处理过程"><a href="#1-请求的处理过程" class="headerlink" title="1. 请求的处理过程"></a>1. 请求的处理过程</h4><ol>
+<li>broker会在它所监听的每个端口上创建一个Acceptor线程。该线程会创建一个链接，并将该链接交给Processor线程去处理。Processor线程也叫做网络线程</li>
+<li>当请求过来的时候，processor线程会将请求放到一个请求队列中</li>
+<li>然后I/O线程就会从请求队列中获取数据，进行处理；处理完之后将结果放到响应队列中，然后再通过processor线程传送回客户端</li>
+</ol>
+<br>
+
+<p><a name="zzdrp"></a></p>
+<h4 id="2-请求种类"><a href="#2-请求种类" class="headerlink" title="2. 请求种类"></a>2. 请求种类</h4><p><a name="dELMg"></a></p>
+<h5 id="2-1-元数据请求"><a href="#2-1-元数据请求" class="headerlink" title="2.1.元数据请求"></a>2.1.元数据请求</h5><p>所谓元数据就是包含topic有哪些分区，分区的副本信息，分区的首领是谁等信息。客户端通过该信息可以知道将请求发送到哪个broker(这里就是首领分区所在的broker)。客户端会缓存元数据，那么它如何保证自己的元数据是罪行的呢？</p>
+<ul>
+<li>topic内的所有broker的元数据信息都是一样的</li>
+<li>当请求的时候，目标broker不是首领broker，那么目标broker会将当前最新的元数据信息返回给客户端。 客户端收到之后就知道自己的元数据信息已经过时了，会做更新并将请求发送到leader broker上去</li>
+<li>同时客户端会定时的主动请求元数据信息，以使自己不落伍</li>
+</ul>
+<br>
+
+<p><a name="zbS6X"></a></p>
+<h5 id="2-2-生产请求"><a href="#2-2-生产请求" class="headerlink" title="2.2.生产请求"></a>2.2.生产请求</h5><p>生产请求，主要有一个acks参数. 该参数表示有多少的副本拥有了该消息才算成功. 该参数有三个值</p>
+<ul>
+<li>0, 表示不用复制，发出去就收工. 不用管是否到达</li>
+<li>1。表示只要leader broker收到就可以了</li>
+<li>all，表示分区内的所有副本都需要成功收到该消息才做发送成功</li>
+</ul>
+<p><br>需要注意的是: broker在收到消息的时候，是将消息写入操作系统的缓存中的，此时并没有写入到磁盘中. 何时写入磁盘取决于操纵系统<br><br><br></p>
+<p><a name="isQNl"></a></p>
+<h5 id="2-3-读取请求"><a href="#2-3-读取请求" class="headerlink" title="2.3.读取请求"></a>2.3.读取请求</h5><p>读取的时候有两个重要参数:</p>
+<ul>
+<li>限制broker最多可以从一个分区返回多少的数据；这个参数可以防止分区返回过多的数据，造成消费端的内存不够的现象</li>
+<li>等待多久之后如果分区还是没有那么多数据，就返回；这个参数防止broker生产的数据太少，等待太久</li>
+</ul>
+<p><br>同时需要注意的是，当生产者在生产数据的时候，该数据的副本数没有达到acks的数量时，consumer是读取不到该消息的。因为假如可以读取到，当leader broker突然挂了，此时acks的数量还不够，那么新的leader broker很可能就没有那条消息，这就会造成再次读取的时候发现读取不到那条消息了，从而导致数据的不一致<br><br><br></p>
+<p><a name="CFmss"></a></p>
+<h5 id="2-4-其他请求"><a href="#2-4-其他请求" class="headerlink" title="2.4.其他请求"></a>2.4.其他请求</h5><p>由于kafka的消息是使用标准的协议进行流转的，所以kafka可以实现跨语言的交流。即java客户端可以读取到go客户端生产的数据。<br>关于客户端跟服务器(即broker)之间的版本升级的问题，需要注意的是: 一定是先升级服务端，然后再升级客户端。</p>
+<ul>
+<li>因为客户端发送请求的时候，会指定自己当前是什么版本。如果该版本在服务端是不支持的，那么服务端将不知道如何处理。反过来则可以处理</li>
+</ul>
+<br>
+
+<p><a name="kUkAq"></a></p>
+<h3 id="物理存储"><a href="#物理存储" class="headerlink" title="物理存储"></a>物理存储</h3><p><a name="OykGr"></a></p>
+<h4 id="1-分区分配规则"><a href="#1-分区分配规则" class="headerlink" title="1. 分区分配规则"></a>1. 分区分配规则</h4><p>分区是kafka最基本的存储单元了，所以在进行分区分配的时候，应尽量做到容灾</p>
+<ul>
+<li>分布均匀的分配在不同的broker中</li>
+<li>同一个分区的不同副本尽量不要放在同一个broker. 防止一个broker挂了，数据丢失</li>
+<li>如果有条件搞多机房多机架，那么也要将分区的副本分不到不同的机房机架上去</li>
+</ul>
+<br>
+
+<p><a name="ddzUg"></a></p>
+<h4 id="2-segment与句柄"><a href="#2-segment与句柄" class="headerlink" title="2. segment与句柄"></a>2. segment与句柄</h4><p>由于在一个大文件里查找和删除都是很费时且容易出错的，所以kafka把分区分成多个片段(segment). 默认情况下，每个片段包含1GB或者一周的数据，以较小者为准。在写入数据的时候，如果一个片段达到它的上限，那么他会被关闭，然后开启一个新的segment来处理数据。<br>这里需要注意的是，操作系统会为每个片段都打开一个句柄，即使该片段不活跃。这样就会造成操作系统的句柄会被快速地用光，所以可以根据实际情况对操作系统做一定的调优。<br><br><br></p>
+<p><a name="J3C60"></a></p>
+<h4 id="3-零复制技术"><a href="#3-零复制技术" class="headerlink" title="3. 零复制技术"></a>3. 零复制技术</h4><p>kafka的消息在网络传输，磁盘上保存，都是同样的数据格式。这个特性可以使数据在读取的时候实现零复制，即直接从文件系统中将消息读取出来，然后直接返回给客户端，而不需要在broker的内存中进行复制解压打包等工作，从而不需要在broker上分配额外的内存去处理。 consumer端拿到数据之后，按照格式进行解压处理即可<br><br><br>这里有个需要注意的地方，就是如果任意一端对数据格式的改动，其他各端都需要跟着改，否则数据就不能兼容处理了。 比如生产端加了某些东西，那么consumer侧也需要做处理，否则将处理不了新数据<br><br><br><br><br></p>
+<p><a name="hLZie"></a></p>
+<h4 id="4-索引"><a href="#4-索引" class="headerlink" title="4. 索引"></a>4. 索引</h4><p>kafak为每个分区都维护了一个索引，以快速读取数据。该索引维护的是消息的偏移量跟片段文件的关系，以及偏移量在片段文件内的位置<br><br><br></p>
+<p><a name="jz2IL"></a></p>
+<h4 id="4-清理"><a href="#4-清理" class="headerlink" title="4. 清理"></a>4. 清理</h4><p>当数据重复或者存在脏数据时，需要对数据进行清理。可通过参数 log.cleaner.enabled 来开启清理工作。每个日志片段的数据，都可以分成两部分:</p>
+<ul>
+<li>干净的部分，这部分数据是上一次清理之后留下来的</li>
+<li>污浊的部分，这部分数据是上一次清理之后产生的</li>
+</ul>
+<p>清理的大致步骤如下</p>
+<ol>
+<li>在内存中生成一个map，将污浊部分的数据写入该map，key为消息的键的hash值，value为消息的偏移量</li>
+<li>由于是从污浊部分数据的开头开始遍历写的，所以如果某个key在污浊数据内存在多次，那么最后一次的数据将保留</li>
+<li>对日志片段的数据进行遍历，从干净部分的数据开始</li>
+<li>如果数据在map中不存在，说明该数据是新数据，移到替换的片段上</li>
+<li>如果数据在map中存在，说明该数据在污浊部分是存在的，则丢弃当前的</li>
+<li>然后将map中的数据，移到替换片段上</li>
+<li>最后将替换片段与原始片段交换，从而实现数据的清理</li>
+</ol>
+<br>
+<br>墓碑消息: key存在，但是其value为null的消息
+
+<p><a name="V4MUp"></a></p>
+<h2 id="chapter-6-可靠的数据保证"><a href="#chapter-6-可靠的数据保证" class="headerlink" title="chapter 6 - 可靠的数据保证"></a>chapter 6 - 可靠的数据保证</h2><p><br>kafka的数据可靠性是通过复制和分区的多副本来保证的。kafka的topic保存在多个分区中，每个分区可以有多个副本，每个副本对应一个broker。所以每个分区都有一个leader，用来对外接受/处理事件，其他的broker则是follower。follower会定时的同步leader的信息，以此来保证自己是同步副本<br><br><br>同步副本需要满足以下条件</p>
+<ul>
+<li>过去6s内向zookeeper发送过心跳</li>
+<li>过去10s从leader那里获取过消息</li>
+<li>过去10s从leader那里获取过最新的消息. 光从首领那里获取消息是不够，还必须是最新的消息</li>
+</ul>
+<p><br>可以通过kafka的几个重要组建的配置来做一些保证<br></p>
+<p><a name="38c860c1"></a></p>
+<h4 id="1-broker的配置"><a href="#1-broker的配置" class="headerlink" title="1. broker的配置"></a>1. broker的配置</h4><table>
+<thead>
+<tr>
+<th>参数</th>
+<th>配置项</th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<p><a name="ul1mo"></a></p>
+<h5 id="1-1-复制参数"><a href="#1-1-复制参数" class="headerlink" title="1.1. 复制参数"></a>1.1. 复制参数</h5><p>该参数表示需要多少个副本，可以在topic层级进行配置，也可以在broker层面配置</p>
+<ul>
+<li>topic级别的参数: replication.factor </li>
+<li>broker层级的参数: default.replication.factor - 表示自动创建的主题的将会有多少个副本</li>
+</ul>
+<p>该值越大可靠性越高，单会消耗过多的资源; 该值越小则可靠性不可保障<br></p>
+<p><a name="l4IB5"></a></p>
+<h5 id="1-2-不完全首领选举"><a href="#1-2-不完全首领选举" class="headerlink" title="1.2. 不完全首领选举"></a>1.2. 不完全首领选举</h5><p>该参数是broker级别(实际上是集群范围内，因为只有broker集群才有选举)的，用于当首领处于不可用的时候，是否可以将非同步副本选举为首领。参数名为: unclean.leader.election, 默认为true</p>
+<ul>
+<li>如果允许则需要忍受消息丢失的问题</li>
+<li>如果不允许，则需要忍受不可用的情况(首领不可用，其他副本又都不是同步副本，那就只能等首领重新活过来了)</li>
+</ul>
+<p><a name="xi2cE"></a></p>
+<h5 id="1-3-最少同步副本"><a href="#1-3-最少同步副本" class="headerlink" title="1.3. 最少同步副本"></a>1.3. 最少同步副本</h5><p>该参数表示kafka写消息的时候，需要多少个副本的确认才认为该消息写入成功。当broker集群中的同步副本少于该配置值时，写消息将失败，此时集群只能提供读功能。这是一个可靠性跟可用性之间的一个权衡<br>在broker跟topic上都可以配置该参数，并且它们都叫: min.insync.replicas<br><br><br></p>
+<p><a name="ypGjC"></a></p>
+<h4 id="2-producer"><a href="#2-producer" class="headerlink" title="2. producer"></a>2. producer</h4><p>生产者在写入消息的时候，很重要的一个参数是acks，表示需要有多少个副本的确认才认为是成功的。同时在写入消息时可能发生错误，此时可以通过重试来提供成功率。但这里需要注意的是并不是所有的错误都是可以重试的</p>
+<ul>
+<li>可重试的错误，一般是网络问题或者 broker集群在选举返回LEADER_NOT_AVAILABLE</li>
+<li>不可重试的错误，一般是配置错误导致的，比如INVALID_CONFIG这种错误</li>
+</ul>
+<p><br>重试带来的风险是，数据可能会重复写入。此时最好在消息中带上一个唯一ID，以方便自己或者consumer做幂等处理<br><br><br></p>
+<p><a name="ftZ0n"></a></p>
+<h4 id="3-consumer"><a href="#3-consumer" class="headerlink" title="3. consumer"></a>3. consumer</h4><p>消费者读取消息都是根据偏移量来进行的，所以如果提交了偏移量但是没有处理完消息就挂了，那么“其他”消费者过来顶替的时候，之前那条消息则永远不会被消费，因为偏移量已经提交了。所以一般都是在处理完了消息之后再进行偏移量的提交的，也正因为该原因，一般都是显式提交偏移量。显式提交偏移量，可能需要注意</p>
+<ul>
+<li>在消费消息的时候，如果失败了，可以将该消息写入其他地方或者写入一个专门的topic，稍后再处理。这样可以保证后面的消息可以正常得到处理，而不影响总体进度</li>
+<li>如果消息过大，或者处理的时候需要做一些IO等操作，可以通过使用线程池来来提高吞吐量</li>
+<li>有时候我们需要消费不只是”at least once” 而是”exactly once”，此时就可以借助其他系统来保证了，比如借助DB的唯一主键来达到幂等消费</li>
+</ul>
+<br>
+
+<p><a name="6iRJ2"></a></p>
+<h2 id="Chapter-11-流式处理"><a href="#Chapter-11-流式处理" class="headerlink" title="Chapter 11 - 流式处理"></a>Chapter 11 - 流式处理</h2><p>事件流，也叫数据流，是一种无边界的事件集合的抽象表示. 在该流中，事件会源源不断的产生，然后被处理，Java 8中的stream就是这么一个东西。事件流除了无边界外，还有其他一些特性</p>
+<ul>
+<li>有序性。事件的发生总是有时间的先后顺序的</li>
+<li>数据不可变性。只要生成了，就不会改变，就像MySQL的binlog记录数据库的所有操作一样</li>
+<li>可重播性. 对历史事件流可以重播，比如重播发生在几个月前的数据，而这也是事件流的一个较大的特性</li>
+</ul>
+<br>
+<br>流式处理是指实地处理一个或多个事件流，跟Request-Response，批处理一样，流式处理也是一种编程范式
+
+<ul>
+<li>request-response: 大部分的请求都是该类型，比如在页面上查询某个商品的价格，请求之后就等在那里，知道有响应返回或者超时. 该范式的特点是: 数据量小，响应时间快</li>
+<li>批处理，是指对数据进行批量处理，比如对一堆数据进行处理然后生成报表供老板看。这种一般都是对冷数据的处理，数据量比较大耗时较严重，不会要求有很高的实时性。</li>
+<li>流式处理，则是介于上面两者之间. 它既不需要响应很及时，但是又不是说过个几个小时才有响应. 同时它一次处理的数据不会非常大，但也不小</li>
+</ul>
+<br>
+<br>
+
+<p><a name="lBNX2"></a></p>
+<h4 id="流式处理的一些概念"><a href="#流式处理的一些概念" class="headerlink" title="流式处理的一些概念"></a>流式处理的一些概念</h4><ul>
+<li>时间. 流式处理中有三个时间<ul>
+<li>事件时间，该时间是事件发生的时间</li>
+<li>日志追加时间. 改时间是事件被存储到某个地方的事件，比如kafka中则是存入到broker中</li>
+<li>处理时间，该时间则是事件被处理的事件. 这个时间不是很准确，比如事件被两个线程处理了，那么它就会有两个处理时间</li>
+</ul>
+</li>
+<li>状态. 事件跟事件之间的信息被称为状态，一般是事件与事件之间有关联性时会用上。状态的类型有<ul>
+<li>本地状态/内部状态. 该状态存储在应用实例的本地，不能被别的实例所看到</li>
+<li>外部状态，该状态是可以在各个实例间共享，一般是通过外部数据存储来维护. 尽量避免这类状态，因为这个很影响流处理过程的时延</li>
+</ul>
+</li>
+<li>流跟表的关系.<ul>
+<li>流包含数据的每个变更</li>
+<li>表，只包含数据的最新状态.</li>
+</ul>
+</li>
+<li>时间窗口，大部分流式处理都是基于事件窗口的，时间窗口在选择上需要注意几点<ul>
+<li>窗口的大小. 窗口越小，就能越快地发现变更，但是噪音也越多. 窗口越大，变更发现的越慢，但是对应的变更越平滑准确</li>
+<li>窗口移动的频率<ul>
+<li>当移动间隔的时间跟窗口的大小刚好相等时，这种窗口被认为滚动窗口. 两个窗口之间是刚好衔接，没有任何的重叠或者间隙</li>
+<li>当有事件发生就移动一次，这种认为是滑动窗口。两个窗口之间会有重叠</li>
+</ul>
+</li>
+<li>窗口可更新的时长，该问题主要对于延迟比较严重的事件到来时应该如何处理. 比如10:00-11:00之间的事件已经处理过了，但是在15:30时收到了一个发生在 10:00-11:00之间的事件，那么需不需要处理呢？对于这种情况可以定义个时间范围，比如只接受1小时的时间偏差的时间，当超过该范围的事件直接忽略</li>
+</ul>
+</li>
+</ul>
+<br>
+
+<p><a name="gWkgN"></a></p>
+<h4 id="流式处理的设计模式"><a href="#流式处理的设计模式" class="headerlink" title="流式处理的设计模式"></a>流式处理的设计模式</h4><p>流式处理的设计模式大概有以下几种</p>
+<ul>
+<li>单事件处理模式</li>
+<li>使用本地状态</li>
+<li>多阶段和重分区<ul>
+<li>该类模型，一般用于需要多次处理得出一个最终结果的业务，并且每一个下游阶段相比上游阶段来说，其数据量都会少很多</li>
+<li>比如对于统计每天涨跌幅度最大的前十的股票. <ul>
+<li>每个实例，不可能处理所有的股票，因为数据太多，实力不允许. 所以股票会根据其代号被分配到不同的实例去处理</li>
+<li>处理好之后，将该股票的涨跌幅度发送到一个只包含单分区的新主题上</li>
+<li>这样新主题的分区收到的数据所包含的内容将很少，只有股票的基本信息，所以能扛住</li>
+</ul>
+</li>
+<li>其实这就是一个map-reduce的过程</li>
+</ul>
+</li>
+<li>使用外部查找-流表的连接<ul>
+<li>这里一般是需要对流信息做一定的数据补充，该数据又存储在数据库中. 比如希望对用户的点击事件做数据丰富，将用户的一些基本信息，比如性别/年龄等信息补充上来. </li>
+<li>此时不可能在流处理中去查询数据库，原因有二<ul>
+<li>这样会对流式处理造成较大的时延</li>
+<li>同时由于事件流的数据量是不可预估的，如果查询将会对数据库造成非常大的压力，从而会影响其他的业务</li>
+</ul>
+</li>
+<li>所以一般的处理是，将数据缓存到本地，然后在数据库有变化时，更新缓存. 即捕捉数据库的变更并形成事件流，该过程被称为CDC (Change Data Capture)</li>
+</ul>
+</li>
+<li>流与流的连接<ul>
+<li>当需要将两个流的同一个key在同一个时间点发生的事件连接起来时，就需要使用流与流的连接. 比如希望看到用户搜索了什么并且从搜索结果中点击了什么，以更精准地建立用户画像，给用户推送相关信息. </li>
+<li>处理的过程大致如下: 相同的key会被分配到同一个任务中，然后该任务就可以获取到该key的所有的事件，并做相关的处理</li>
+</ul>
+</li>
+<li>重新处理<ul>
+<li>当流式处理应用出现了bug，此时对其进行升级改进。那么对于之前处理过的数据该如何更正呢？在kafka中，每个事件都会被持久化起来. 这样当改造之后的流式应用新版本上线之后，可以<ul>
+<li>将新版本的应用当作一个新的消费者群组</li>
+<li>让它从输入topic的起始偏移量开始处理数据</li>
+<li>检查结果流，当新版本的应用程序赶上进度时，将客户端应用程序从旧版本的流式应用切换到新版本</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<br>
+<br>
+
+
+]]></content>
+      <categories>
+        <category>kafka</category>
+      </categories>
+      <tags>
+        <tag>读书笔记</tag>
       </tags>
   </entry>
 </search>
