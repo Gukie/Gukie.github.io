@@ -723,7 +723,7 @@
 <br>
 <br>墓碑消息: key存在，但是其value为null的消息
 
-<p><a name="V4MUp"></a></p>
+<p><a name="c236ec07"></a></p>
 <h2 id="chapter-6-可靠的数据保证"><a href="#chapter-6-可靠的数据保证" class="headerlink" title="chapter 6 - 可靠的数据保证"></a>chapter 6 - 可靠的数据保证</h2><p><br>kafka的数据可靠性是通过复制和分区的多副本来保证的。kafka的topic保存在多个分区中，每个分区可以有多个副本，每个副本对应一个broker。所以每个分区都有一个leader，用来对外接受/处理事件，其他的broker则是follower。follower会定时的同步leader的信息，以此来保证自己是同步副本<br><br><br>同步副本需要满足以下条件</p>
 <ul>
 <li>过去6s内向zookeeper发送过心跳</li>
@@ -732,7 +732,7 @@
 </ul>
 <p><br>可以通过kafka的几个重要组建的配置来做一些保证<br></p>
 <p><a name="38c860c1"></a></p>
-<h4 id="1-broker的配置"><a href="#1-broker的配置" class="headerlink" title="1. broker的配置"></a>1. broker的配置</h4><table>
+<h3 id="1-broker的配置"><a href="#1-broker的配置" class="headerlink" title="1. broker的配置"></a>1. broker的配置</h3><table>
 <thead>
 <tr>
 <th>参数</th>
@@ -751,30 +751,30 @@
 <td></td>
 </tr>
 </tbody></table>
-<p><a name="ul1mo"></a></p>
-<h5 id="1-1-复制参数"><a href="#1-1-复制参数" class="headerlink" title="1.1. 复制参数"></a>1.1. 复制参数</h5><p>该参数表示需要多少个副本，可以在topic层级进行配置，也可以在broker层面配置</p>
+<p><a name="AJtbN"></a></p>
+<h4 id="1-1-复制参数"><a href="#1-1-复制参数" class="headerlink" title="1.1. 复制参数"></a>1.1. 复制参数</h4><p>该参数表示需要多少个副本，可以在topic层级进行配置，也可以在broker层面配置</p>
 <ul>
 <li>topic级别的参数: replication.factor </li>
 <li>broker层级的参数: default.replication.factor - 表示自动创建的主题的将会有多少个副本</li>
 </ul>
 <p>该值越大可靠性越高，单会消耗过多的资源; 该值越小则可靠性不可保障<br></p>
-<p><a name="l4IB5"></a></p>
-<h5 id="1-2-不完全首领选举"><a href="#1-2-不完全首领选举" class="headerlink" title="1.2. 不完全首领选举"></a>1.2. 不完全首领选举</h5><p>该参数是broker级别(实际上是集群范围内，因为只有broker集群才有选举)的，用于当首领处于不可用的时候，是否可以将非同步副本选举为首领。参数名为: unclean.leader.election, 默认为true</p>
+<p><a name="PHrM4"></a></p>
+<h4 id="1-2-不完全首领选举"><a href="#1-2-不完全首领选举" class="headerlink" title="1.2. 不完全首领选举"></a>1.2. 不完全首领选举</h4><p>该参数是broker级别(实际上是集群范围内，因为只有broker集群才有选举)的，用于当首领处于不可用的时候，是否可以将非同步副本选举为首领。参数名为: unclean.leader.election, 默认为true</p>
 <ul>
 <li>如果允许则需要忍受消息丢失的问题</li>
 <li>如果不允许，则需要忍受不可用的情况(首领不可用，其他副本又都不是同步副本，那就只能等首领重新活过来了)</li>
 </ul>
-<p><a name="xi2cE"></a></p>
-<h5 id="1-3-最少同步副本"><a href="#1-3-最少同步副本" class="headerlink" title="1.3. 最少同步副本"></a>1.3. 最少同步副本</h5><p>该参数表示kafka写消息的时候，需要多少个副本的确认才认为该消息写入成功。当broker集群中的同步副本少于该配置值时，写消息将失败，此时集群只能提供读功能。这是一个可靠性跟可用性之间的一个权衡<br>在broker跟topic上都可以配置该参数，并且它们都叫: min.insync.replicas<br><br><br></p>
-<p><a name="ypGjC"></a></p>
-<h4 id="2-producer"><a href="#2-producer" class="headerlink" title="2. producer"></a>2. producer</h4><p>生产者在写入消息的时候，很重要的一个参数是acks，表示需要有多少个副本的确认才认为是成功的。同时在写入消息时可能发生错误，此时可以通过重试来提供成功率。但这里需要注意的是并不是所有的错误都是可以重试的</p>
+<p><a name="e6b31b40"></a></p>
+<h4 id="1-3-最少同步副本"><a href="#1-3-最少同步副本" class="headerlink" title="1.3. 最少同步副本"></a>1.3. 最少同步副本</h4><p>该参数表示kafka写消息的时候，需要多少个副本的确认才认为该消息写入成功。当broker集群中的同步副本少于该配置值时，写消息将失败，此时集群只能提供读功能。这是一个可靠性跟可用性之间的一个权衡<br>在broker跟topic上都可以配置该参数，并且它们都叫: min.insync.replicas<br><br><br></p>
+<p><a name="QdXNv"></a></p>
+<h3 id="2-producer"><a href="#2-producer" class="headerlink" title="2. producer"></a>2. producer</h3><p>生产者在写入消息的时候，很重要的一个参数是acks，表示需要有多少个副本的确认才认为是成功的。同时在写入消息时可能发生错误，此时可以通过重试来提供成功率。但这里需要注意的是并不是所有的错误都是可以重试的</p>
 <ul>
 <li>可重试的错误，一般是网络问题或者 broker集群在选举返回LEADER_NOT_AVAILABLE</li>
 <li>不可重试的错误，一般是配置错误导致的，比如INVALID_CONFIG这种错误</li>
 </ul>
 <p><br>重试带来的风险是，数据可能会重复写入。此时最好在消息中带上一个唯一ID，以方便自己或者consumer做幂等处理<br><br><br></p>
-<p><a name="ftZ0n"></a></p>
-<h4 id="3-consumer"><a href="#3-consumer" class="headerlink" title="3. consumer"></a>3. consumer</h4><p>消费者读取消息都是根据偏移量来进行的，所以如果提交了偏移量但是没有处理完消息就挂了，那么“其他”消费者过来顶替的时候，之前那条消息则永远不会被消费，因为偏移量已经提交了。所以一般都是在处理完了消息之后再进行偏移量的提交的，也正因为该原因，一般都是显式提交偏移量。显式提交偏移量，可能需要注意</p>
+<p><a name="YshaY"></a></p>
+<h3 id="3-consumer"><a href="#3-consumer" class="headerlink" title="3. consumer"></a>3. consumer</h3><p>消费者读取消息都是根据偏移量来进行的，所以如果提交了偏移量但是没有处理完消息就挂了，那么“其他”消费者过来顶替的时候，之前那条消息则永远不会被消费，因为偏移量已经提交了。所以一般都是在处理完了消息之后再进行偏移量的提交的，也正因为该原因，一般都是显式提交偏移量。显式提交偏移量，可能需要注意</p>
 <ul>
 <li>在消费消息的时候，如果失败了，可以将该消息写入其他地方或者写入一个专门的topic，稍后再处理。这样可以保证后面的消息可以正常得到处理，而不影响总体进度</li>
 <li>如果消息过大，或者处理的时候需要做一些IO等操作，可以通过使用线程池来来提高吞吐量</li>
@@ -782,8 +782,8 @@
 </ul>
 <br>
 
-<p><a name="6iRJ2"></a></p>
-<h2 id="Chapter-11-流式处理"><a href="#Chapter-11-流式处理" class="headerlink" title="Chapter 11 - 流式处理"></a>Chapter 11 - 流式处理</h2><p>事件流，也叫数据流，是一种无边界的事件集合的抽象表示. 在该流中，事件会源源不断的产生，然后被处理，Java 8中的stream就是这么一个东西。事件流除了无边界外，还有其他一些特性</p>
+<p><a name="b6cda125"></a></p>
+<h2 id="chapter-11-流式处理"><a href="#chapter-11-流式处理" class="headerlink" title="chapter 11 - 流式处理"></a>chapter 11 - 流式处理</h2><p>事件流，也叫数据流，是一种无边界的事件集合的抽象表示. 在该流中，事件会源源不断的产生，然后被处理，Java 8中的stream就是这么一个东西。事件流除了无边界外，还有其他一些特性</p>
 <ul>
 <li>有序性。事件的发生总是有时间的先后顺序的</li>
 <li>数据不可变性。只要生成了，就不会改变，就像MySQL的binlog记录数据库的所有操作一样</li>
@@ -800,8 +800,8 @@
 <br>
 <br>
 
-<p><a name="lBNX2"></a></p>
-<h3 id="1-流式处理的一些概念"><a href="#1-流式处理的一些概念" class="headerlink" title="1. 流式处理的一些概念"></a>1. 流式处理的一些概念</h3><ul>
+<p><a name="R3gXy"></a></p>
+<h3 id="流式处理的一些概念"><a href="#流式处理的一些概念" class="headerlink" title="流式处理的一些概念"></a>流式处理的一些概念</h3><ul>
 <li>时间. 流式处理中有三个时间<ul>
 <li>事件时间，该时间是事件发生的时间</li>
 <li>日志追加时间. 改时间是事件被存储到某个地方的事件，比如kafka中则是存入到broker中</li>
@@ -831,8 +831,8 @@
 </ul>
 <br>
 
-<p><a name="gWkgN"></a></p>
-<h3 id="2-流式处理的设计模式"><a href="#2-流式处理的设计模式" class="headerlink" title="2.流式处理的设计模式"></a>2.流式处理的设计模式</h3><p>流式处理的设计模式大概有以下几种</p>
+<p><a name="ZD60j"></a></p>
+<h3 id="流式处理的设计模式"><a href="#流式处理的设计模式" class="headerlink" title="流式处理的设计模式"></a>流式处理的设计模式</h3><p>流式处理的设计模式大概有以下几种</p>
 <ul>
 <li>单事件处理模式</li>
 <li>使用本地状态</li>
@@ -1054,7 +1054,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#chapter-2-安装"><span class="nav-number">1.</span> <span class="nav-text">chapter 2-安装</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-zookeeper"><span class="nav-number">1.1.</span> <span class="nav-text">1. zookeeper</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-kafka-broker配置"><span class="nav-number">1.2.</span> <span class="nav-text">2. kafka broker配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-kafka-topic的配置"><span class="nav-number">1.3.</span> <span class="nav-text">3. kafka topic的配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-硬件选择的影响"><span class="nav-number">1.4.</span> <span class="nav-text">4. 硬件选择的影响</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-其他"><span class="nav-number">1.5.</span> <span class="nav-text">5. 其他</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#kafka-producer"><span class="nav-number">2.</span> <span class="nav-text">kafka producer</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#chapter-4-consumer"><span class="nav-number">3.</span> <span class="nav-text">chapter 4 - consumer</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-再分配"><span class="nav-number">3.1.</span> <span class="nav-text">1. 再分配</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-消费者的一些参数配置"><span class="nav-number">3.2.</span> <span class="nav-text">2. 消费者的一些参数配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-偏移量-amp-提交"><span class="nav-number">3.3.</span> <span class="nav-text">3. 偏移量&amp;提交</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#chapter-5-深入Kafka"><span class="nav-number">4.</span> <span class="nav-text">chapter 5 - 深入Kafka</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#broker集群"><span class="nav-number">4.1.</span> <span class="nav-text">broker集群</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-集群成员关系"><span class="nav-number">4.1.1.</span> <span class="nav-text">1.集群成员关系</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-控制器broker"><span class="nav-number">4.1.2.</span> <span class="nav-text">2.控制器broker</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-复制"><span class="nav-number">4.1.3.</span> <span class="nav-text">3. 复制</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#请求处理"><span class="nav-number">4.2.</span> <span class="nav-text">请求处理</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-请求的处理过程"><span class="nav-number">4.2.1.</span> <span class="nav-text">1. 请求的处理过程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-请求种类"><span class="nav-number">4.2.2.</span> <span class="nav-text">2. 请求种类</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#2-1-元数据请求"><span class="nav-number">4.2.2.1.</span> <span class="nav-text">2.1.元数据请求</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-2-生产请求"><span class="nav-number">4.2.2.2.</span> <span class="nav-text">2.2.生产请求</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-3-读取请求"><span class="nav-number">4.2.2.3.</span> <span class="nav-text">2.3.读取请求</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-4-其他请求"><span class="nav-number">4.2.2.4.</span> <span class="nav-text">2.4.其他请求</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#物理存储"><span class="nav-number">4.3.</span> <span class="nav-text">物理存储</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-分区分配规则"><span class="nav-number">4.3.1.</span> <span class="nav-text">1. 分区分配规则</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-segment与句柄"><span class="nav-number">4.3.2.</span> <span class="nav-text">2. segment与句柄</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-零复制技术"><span class="nav-number">4.3.3.</span> <span class="nav-text">3. 零复制技术</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-索引"><span class="nav-number">4.3.4.</span> <span class="nav-text">4. 索引</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-清理"><span class="nav-number">4.3.5.</span> <span class="nav-text">4. 清理</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#chapter-6-可靠的数据保证"><span class="nav-number">5.</span> <span class="nav-text">chapter 6 - 可靠的数据保证</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-broker的配置"><span class="nav-number">5.0.1.</span> <span class="nav-text">1. broker的配置</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#1-1-复制参数"><span class="nav-number">5.0.1.1.</span> <span class="nav-text">1.1. 复制参数</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#1-2-不完全首领选举"><span class="nav-number">5.0.1.2.</span> <span class="nav-text">1.2. 不完全首领选举</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#1-3-最少同步副本"><span class="nav-number">5.0.1.3.</span> <span class="nav-text">1.3. 最少同步副本</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-producer"><span class="nav-number">5.0.2.</span> <span class="nav-text">2. producer</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-consumer"><span class="nav-number">5.0.3.</span> <span class="nav-text">3. consumer</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Chapter-11-流式处理"><span class="nav-number">6.</span> <span class="nav-text">Chapter 11 - 流式处理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-流式处理的一些概念"><span class="nav-number">6.1.</span> <span class="nav-text">1. 流式处理的一些概念</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-流式处理的设计模式"><span class="nav-number">6.2.</span> <span class="nav-text">2.流式处理的设计模式</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#chapter-2-安装"><span class="nav-number">1.</span> <span class="nav-text">chapter 2-安装</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-zookeeper"><span class="nav-number">1.1.</span> <span class="nav-text">1. zookeeper</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-kafka-broker配置"><span class="nav-number">1.2.</span> <span class="nav-text">2. kafka broker配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-kafka-topic的配置"><span class="nav-number">1.3.</span> <span class="nav-text">3. kafka topic的配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-硬件选择的影响"><span class="nav-number">1.4.</span> <span class="nav-text">4. 硬件选择的影响</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-其他"><span class="nav-number">1.5.</span> <span class="nav-text">5. 其他</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#kafka-producer"><span class="nav-number">2.</span> <span class="nav-text">kafka producer</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#chapter-4-consumer"><span class="nav-number">3.</span> <span class="nav-text">chapter 4 - consumer</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-再分配"><span class="nav-number">3.1.</span> <span class="nav-text">1. 再分配</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-消费者的一些参数配置"><span class="nav-number">3.2.</span> <span class="nav-text">2. 消费者的一些参数配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-偏移量-amp-提交"><span class="nav-number">3.3.</span> <span class="nav-text">3. 偏移量&amp;提交</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#chapter-5-深入Kafka"><span class="nav-number">4.</span> <span class="nav-text">chapter 5 - 深入Kafka</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#broker集群"><span class="nav-number">4.1.</span> <span class="nav-text">broker集群</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-集群成员关系"><span class="nav-number">4.1.1.</span> <span class="nav-text">1.集群成员关系</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-控制器broker"><span class="nav-number">4.1.2.</span> <span class="nav-text">2.控制器broker</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-复制"><span class="nav-number">4.1.3.</span> <span class="nav-text">3. 复制</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#请求处理"><span class="nav-number">4.2.</span> <span class="nav-text">请求处理</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-请求的处理过程"><span class="nav-number">4.2.1.</span> <span class="nav-text">1. 请求的处理过程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-请求种类"><span class="nav-number">4.2.2.</span> <span class="nav-text">2. 请求种类</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#2-1-元数据请求"><span class="nav-number">4.2.2.1.</span> <span class="nav-text">2.1.元数据请求</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-2-生产请求"><span class="nav-number">4.2.2.2.</span> <span class="nav-text">2.2.生产请求</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-3-读取请求"><span class="nav-number">4.2.2.3.</span> <span class="nav-text">2.3.读取请求</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-4-其他请求"><span class="nav-number">4.2.2.4.</span> <span class="nav-text">2.4.其他请求</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#物理存储"><span class="nav-number">4.3.</span> <span class="nav-text">物理存储</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-分区分配规则"><span class="nav-number">4.3.1.</span> <span class="nav-text">1. 分区分配规则</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-segment与句柄"><span class="nav-number">4.3.2.</span> <span class="nav-text">2. segment与句柄</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-零复制技术"><span class="nav-number">4.3.3.</span> <span class="nav-text">3. 零复制技术</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-索引"><span class="nav-number">4.3.4.</span> <span class="nav-text">4. 索引</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-清理"><span class="nav-number">4.3.5.</span> <span class="nav-text">4. 清理</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#chapter-6-可靠的数据保证"><span class="nav-number">5.</span> <span class="nav-text">chapter 6 - 可靠的数据保证</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-broker的配置"><span class="nav-number">5.1.</span> <span class="nav-text">1. broker的配置</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-1-复制参数"><span class="nav-number">5.1.1.</span> <span class="nav-text">1.1. 复制参数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-2-不完全首领选举"><span class="nav-number">5.1.2.</span> <span class="nav-text">1.2. 不完全首领选举</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-3-最少同步副本"><span class="nav-number">5.1.3.</span> <span class="nav-text">1.3. 最少同步副本</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-producer"><span class="nav-number">5.2.</span> <span class="nav-text">2. producer</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-consumer"><span class="nav-number">5.3.</span> <span class="nav-text">3. consumer</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#chapter-11-流式处理"><span class="nav-number">6.</span> <span class="nav-text">chapter 11 - 流式处理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#流式处理的一些概念"><span class="nav-number">6.1.</span> <span class="nav-text">流式处理的一些概念</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#流式处理的设计模式"><span class="nav-number">6.2.</span> <span class="nav-text">流式处理的设计模式</span></a></li></ol></li></ol></div>
             
 
           </div>
